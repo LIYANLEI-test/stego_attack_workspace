@@ -11,6 +11,18 @@ The project rule is:
 use native original-repository generation whenever practical
 ```
 
+Local compatibility adaptations are allowed only when they preserve the method's
+expected paper behavior. Acceptable adaptations include model/cache path
+configuration, output directory plumbing, checkpoint links, missing import shims,
+CLI controls for existing paper parameters, and runner failure logging.
+Adaptations must not change the core embedding, sampling, inversion, decoding,
+ECC, payload mapping, or metric logic in a way that would make results diverge
+from the original paper expectation.
+
+Smoke runs in this workspace prove that native code paths execute; they are not
+paper-level reproduction claims unless the paper's settings, assets, sample
+counts, and evaluation protocol are used and all deviations are documented.
+
 This audit checks whether the workspace code follows that rule and records the
 places where local compatibility changes are required.
 
@@ -33,7 +45,8 @@ The accurate claim is therefore:
 
 ```text
 native original-repository generation as far as practical, with documented
-third-party/reference exceptions and local compatibility patches
+third-party/reference exceptions and local compatibility patches that preserve
+the paper method semantics
 ```
 
 It should not be described as every reference checkout being pristine.

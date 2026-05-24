@@ -13,6 +13,13 @@ adaptations have been removed. Diffusion-Stego is the one exception here: it is
 integrated from the supplied NS-DSer reference implementation because no
 separate official repository is currently selected.
 
+Local compatibility adaptations are acceptable only when they preserve the
+original method semantics and expected paper behavior. Path plumbing, cache
+locations, checkpoint links, missing import shims, runner logging, and exposing
+existing paper parameters as CLI options are acceptable. Changes to embedding,
+sampling, inversion, decoding, ECC, payload mapping, or metric logic are not
+acceptable unless explicitly recorded as a non-paper variant.
+
 ## Summary
 
 | Method | Status | Runnable entry | Large assets |

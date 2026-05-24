@@ -8,6 +8,14 @@ The current baseline rule is:
 use native original-repository implementations whenever possible
 ```
 
+Local compatibility adaptations are allowed when they only make the public code
+runnable in this workspace, for example model/cache path configuration, output
+directory plumbing, checkpoint links, missing import shims, or runner failure
+logging. These adaptations must not change the method's core embedding,
+sampling, inversion, decoding, ECC, payload mapping, or metric logic. Formal
+results should be interpreted against the original paper settings and any
+deviation must be documented.
+
 Do not use `/home/liyanlei/work/NS-DSer-master` as an implementation source.
 That code was only a reference from another unpublished project. This workspace
 should keep published baselines under `references/` from their own public
