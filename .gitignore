@@ -1,0 +1,76 @@
+# Python/cache
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments
+.env
+.venv/
+venv/
+env/
+conda-meta/
+
+# Logs and generated run output
+*.log
+logs/
+outputs/
+results/
+experiments/
+notebooks/.ipynb_checkpoints/
+
+# Workspace-local generated data. Large canonical data lives under /data2.
+data/
+baselines/
+identity_runs/
+protocols/
+
+# Model/data artifacts
+*.ckpt
+*.pth
+*.pt
+*.safetensors
+*.bin
+*.npz
+*.npy
+*.pkl
+*.lmdb
+*.mdb
+*.tar
+*.tar.gz
+*.zip
+
+# Hugging Face / model caches
+.cache/
+huggingface/
+hf_cache/
+
+# Nested reference runtime artifacts
+references/**/__pycache__/
+references/**/*.py[cod]
+references/**/.pytest_cache/
+references/**/weights/
+references/**/out/
+references/**/outputs/
+references/**/output/
+references/**/results/
+references/**/results_*/
+references/**/logs/
+references/**/runs/
+references/**/wandb/
+references/**/.ipynb_checkpoints/
+references/**/hf_auth
+
+# Node artifacts from third-party demos
+references/**/node_modules/
+references/**/.next/
+references/**/dist/
+references/**/build/
+
+# OS/editor
+.DS_Store
+Thumbs.db
+*~
+*.swp

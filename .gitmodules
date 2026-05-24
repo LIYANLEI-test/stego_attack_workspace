@@ -1,0 +1,24 @@
+[submodule "references/CRoSS"]
+	path = references/CRoSS
+	url = https://github.com/yujiwen/CRoSS.git
+	ignore = dirty
+[submodule "references/pulsar"]
+	path = references/pulsar
+	url = https://github.com/spacelab-ccny/pulsar.git
+	ignore = dirty
+[submodule "references/GSD"]
+	path = references/GSD
+	url = https://github.com/zqqq2/Improved-Generative-Steganography-Based-on-Diffusion-Model-code-2025.git
+	ignore = dirty
+[submodule "references/mas_GRDH"]
+	path = references/mas_GRDH
+	url = https://github.com/HXX5656/mas_GRDH.git
+	ignore = dirty
+[submodule "references/MDDM-thirdparty"]
+	path = references/MDDM-thirdparty
+	url = https://github.com/RGlodAkshat/MDDM-Generative-Image-Steganography-Based-on-Diffusion-Models.git
+	ignore = dirty
+[submodule "references/RGS"]
+	path = references/RGS
+	url = https://github.com/FBW-JNU/RGS.git
+	ignore = dirty

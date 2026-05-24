@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""Run Pulsar identity recovery with deterministic method-capacity payloads."""
+
+from __future__ import annotations
+
+import argparse
+import csv
+import hashlib
+import json
+import os
+import sys
+import time
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
+if str(WORKSPACE_ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_ROOT / "scripts"))
+
+from pulsar_native_utils import (  # noqa: E402
+    DEFAULT_HF_ENDPOINT,
+    DEFAULT_HF_HOME,
+    DEFAULT_PULSAR_REF,
+    configure_sage,
+    ensure_hf_cache,
+    load_official_pulsar,
+)
+
+
+PROTOCOL_SEED = "stego-attack-native-identity-v1-20260522"
+PULSAR_REPOS = {
+    "church": "google/ddpm-church-256",
+    "celebahq": "google/ddpm-celebahq-256",
+    "bedroom": "google/ddpm-bedroom-256",
+    "cat": "google/ddpm-cat-256",
+}
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", default="/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/pulsar")
+    parser.add_argument("--count", type=int, default=500)
+    parser.add_argument("--start-index", type=int, default=0)
+    parser.add_argument("--model", default="bedroom")
+    parser.add_argument("--scheduler", default="ddim", choices=["ddim", "ddpm"])
+    parser.add_argument("--steps", type=int, default=50)
+    parser.add_argument("--region-estimate-samples", type=int, default=1)
+    parser.add_argument("--hist-bins", type=int, default=100)
+    parser.add_argument("--key", default="stego-attack-workspace-pulsar-key")
+    parser.add_argument("--reference-dir", default=str(DEFAULT_PULSAR_REF))
+    parser.add_argument("--hf-cache-dir", default=str(DEFAULT_HF_HOME))
+    parser.add_argument("--hf-endpoint", default=DEFAULT_HF_ENDPOINT)
+    parser.add_argument("--sage-bin", default="/data2/liyanlei/envs/stego_attack/bin/sage")
+    parser.add_argument("--save-images", action="store_true")
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument(
+        "--retry-failures",
+        action="store_true",
+        help="Retry sample indices already recorded in identity_failures.csv.",
+    )
+    return parser.parse_args()
+
+
+def derive_bytes(sample_index: int, length: int) -> bytes:
+    return hashlib.shake_256(
+        f"{PROTOCOL_SEED}|pulsar|{sample_index:06d}|{length}".encode("utf-8")
+    ).digest(length)
+
+
+def bit_accuracy(expected: bytes, recovered: bytes) -> tuple[int, int, float]:
+    n = min(len(expected), len(recovered))
+    bit_count = n * 8
+    bit_errors = 0
+    for a, b in zip(expected[:n], recovered[:n]):
+        bit_errors += (a ^ b).bit_count()
+    if len(expected) != len(recovered):
+        bit_errors += abs(len(expected) - len(recovered)) * 8
+        bit_count = max(len(expected), len(recovered)) * 8
+    acc = 1.0 - (bit_errors / bit_count if bit_count else 0.0)
+    return bit_errors, bit_count, acc
+
+
+def load_done(csv_path: Path) -> set[int]:
+    if not csv_path.exists():
+        return set()
+    with csv_path.open("r", encoding="utf-8", newline="") as handle:
+        return {int(row["sample_index"]) for row in csv.DictReader(handle)}
+
+
+def append_row(csv_path: Path, row: dict[str, object]) -> None:
+    exists = csv_path.exists()
+    with csv_path.open("a", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(row.keys()))
+        if not exists:
+            writer.writeheader()
+        writer.writerow(row)
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def append_failure(csv_path: Path, row: dict[str, object]) -> None:
+    fieldnames = [
+        "method",
+        "sample_index",
+        "model_repo",
+        "scheduler",
+        "steps",
+        "region_estimate_samples",
+        "hist_bins",
+        "payload_bytes",
+        "payload_sha256",
+        "stage",
+        "error_type",
+        "error_summary",
+        "traceback_summary",
+        "runtime_s",
+        "created_at_utc",
+    ]
+    exists = csv_path.exists()
+    with csv_path.open("a", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        if not exists:
+            writer.writeheader()
+        writer.writerow({key: row.get(key, "") for key in fieldnames})
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def summarize_exception(exc: Exception, max_chars: int = 1000) -> str:
+    text = f"{type(exc).__name__}: {exc}"
+    text = " ".join(text.split())
+    if len(text) > max_chars:
+        return text[: max_chars - 3] + "..."
+    return text
+
+
+def main() -> None:
+    args = parse_args()
+    ensure_hf_cache(args.hf_cache_dir, args.hf_endpoint)
+    configure_sage(sage_bin=args.sage_bin, reference_dir=args.reference_dir)
+    pulsar = load_official_pulsar(args.reference_dir)
+
+    from diffusers import DDIMScheduler, DDPMScheduler
+
+    scheduler_cls = {"ddim": DDIMScheduler, "ddpm": DDPMScheduler}[args.scheduler]
+    repo = PULSAR_REPOS.get(args.model, args.model)
+    out = Path(args.output_dir).resolve()
+    image_dir = out / "images"
+    out.mkdir(parents=True, exist_ok=True)
+    if args.save_images:
+        image_dir.mkdir(parents=True, exist_ok=True)
+
+    csv_path = out / "identity_results.csv"
+    failures_path = out / "identity_failures.csv"
+    if args.force and csv_path.exists():
+        csv_path.unlink()
+    if args.force and failures_path.exists():
+        failures_path.unlink()
+    done = load_done(csv_path)
+    if not args.retry_failures:
+        done.update(load_done(failures_path))
+
+    stego = pulsar.Pulsar(
+        repo=repo,
+        scheduler=scheduler_cls,
+        num_inference_steps=args.steps,
+        seed=b"0",
+        key=args.key.encode("utf-8").ljust(64, b"\x00")[:64],
+        benchmarks=False,
+    )
+
+    for sample_index in range(args.start_index, args.count):
+        if sample_index in done:
+            continue
+        started = time.perf_counter()
+        capacity = None
+        message = b""
+        stage = "init"
+        try:
+            stage = "seed"
+            seed = f"{sample_index}".encode("utf-8")
+            stego.modify_randomness(new_seed=seed)
+            stego.generate_state = {}
+            stage = "estimate_regions"
+            capacity = int(
+                stego.estimate_regions(
+                    n_to_gen=args.region_estimate_samples,
+                    n_hist_bins=args.hist_bins,
+                    end_to_end=False,
+                )
+            )
+            message = derive_bytes(sample_index, capacity)
+            stage = "generate_with_regions"
+            generated = stego.generate_with_regions(message)
+            last = stego.scheduler.num_inference_steps - 1
+            hidden = generated["samples"][last]["hidden"]
+            image_path = ""
+            if args.save_images:
+                stage = "save_reload_image"
+                image_path = str(image_dir / f"{sample_index:06d}.png")
+                stego.save_sample(hidden, image_path)
+                hidden = stego.load_sample(image_path)
+            stage = "reveal_with_regions"
+            recovered = stego.reveal_with_regions(hidden)
+            recovered = recovered[: len(message)]
+            bit_errors, bit_count, bit_acc = bit_accuracy(message, recovered)
+            row = {
+                "method": "pulsar",
+                "sample_index": sample_index,
+                "model_repo": repo,
+                "scheduler": args.scheduler,
+                "steps": args.steps,
+                "region_estimate_samples": args.region_estimate_samples,
+                "hist_bins": args.hist_bins,
+                "payload_bytes": len(message),
+                "payload_bits": len(message) * 8,
+                "payload_sha256": hashlib.sha256(message).hexdigest(),
+                "recovered_sha256": hashlib.sha256(recovered).hexdigest(),
+                "bit_errors": bit_errors,
+                "bit_count": bit_count,
+                "bit_accuracy": bit_acc,
+                "exact_match": recovered == message,
+                "image_path": image_path,
+                "runtime_s": time.perf_counter() - started,
+            }
+            append_row(csv_path, row)
+            print(
+                f"[pulsar] {sample_index + 1}/{args.count} "
+                f"cap={capacity} acc={bit_acc:.6f} exact={row['exact_match']} runtime={row['runtime_s']:.2f}s",
+                flush=True,
+            )
+        except Exception as exc:
+            failure = {
+                "method": "pulsar",
+                "sample_index": sample_index,
+                "model_repo": repo,
+                "scheduler": args.scheduler,
+                "steps": args.steps,
+                "region_estimate_samples": args.region_estimate_samples,
+                "hist_bins": args.hist_bins,
+                "payload_bytes": capacity if capacity is not None else "",
+                "payload_sha256": hashlib.sha256(message).hexdigest() if message else "",
+                "stage": stage,
+                "error_type": type(exc).__name__,
+                "error_summary": summarize_exception(exc),
+                "traceback_summary": traceback.format_exc(limit=4).strip()[-2000:],
+                "runtime_s": time.perf_counter() - started,
+                "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            }
+            append_failure(failures_path, failure)
+            print(
+                f"[pulsar] {sample_index + 1}/{args.count} FAILED "
+                f"stage={stage} cap={capacity} error={failure['error_summary']}",
+                flush=True,
+            )
+
+    manifest = {
+        "method": "pulsar",
+        "protocol_id": "native_identity_v1_20260522",
+        "protocol_seed": PROTOCOL_SEED,
+        "count": args.count,
+        "model_repo": repo,
+        "scheduler": args.scheduler,
+        "steps": args.steps,
+        "region_estimate_samples": args.region_estimate_samples,
+        "hist_bins": args.hist_bins,
+        "message_rule": "SHAKE256(protocol_seed | pulsar | sample_index | capacity_bytes)",
+        "results_csv": str(csv_path),
+        "failures_csv": str(failures_path),
+        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+    }
+    (out / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")
+    print(f"results={csv_path}")
+
+
+if __name__ == "__main__":
+    main()
