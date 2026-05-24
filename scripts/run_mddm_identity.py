@@ -10,6 +10,7 @@ import json
 import os
 import sys
 import time
+import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -85,6 +86,35 @@ def append_row(path: Path, row: dict[str, object]) -> None:
         os.fsync(handle.fileno())
 
 
+def append_failure(path: Path, row: dict[str, object]) -> None:
+    fieldnames = [
+        "method",
+        "sample_index",
+        "stage",
+        "error_type",
+        "error_summary",
+        "traceback_summary",
+        "runtime_s",
+        "created_at_utc",
+    ]
+    exists = path.exists()
+    with path.open("a", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        if not exists:
+            writer.writeheader()
+        writer.writerow({key: row.get(key, "") for key in fieldnames})
+        handle.flush()
+        os.fsync(handle.fileno())
+
+
+def summarize_exception(exc: Exception, max_chars: int = 1000) -> str:
+    text = f"{type(exc).__name__}: {exc}"
+    text = " ".join(text.split())
+    if len(text) > max_chars:
+        return text[: max_chars - 3] + "..."
+    return text
+
+
 def main() -> None:
     args = parse_args()
     out = Path(args.output_dir).resolve()
@@ -93,9 +123,13 @@ def main() -> None:
     image_dir.mkdir(parents=True, exist_ok=True)
     record_dir.mkdir(parents=True, exist_ok=True)
     csv_path = out / "identity_results.csv"
+    failures_path = out / "identity_failures.csv"
     if args.force and csv_path.exists():
         csv_path.unlink()
+    if args.force and failures_path.exists():
+        failures_path.unlink()
     done = load_done(csv_path)
+    done.update(load_done(failures_path))
 
     protocol_dir = Path(args.protocol_dir).resolve()
     messages = load_jsonl(protocol_dir / "mddm_messages_500.jsonl")
@@ -116,50 +150,70 @@ def main() -> None:
         if sample_index in done:
             continue
         started = time.perf_counter()
-        if args.payload_bytes is None:
-            message = str(messages[sample_index]["payload_text"])
-        else:
-            message = printable_ascii_payload("mddm", sample_index, args.payload_bytes)
-        prompt = prompts[sample_index % len(prompts)]
-        generated = service.generate(
-            prompt=prompt,
-            hidden_message=message,
-            seed=sample_index,
-            num_steps=args.steps,
-            guidance_scale=args.guidance_scale,
-            negative_prompt=None,
-            ecc_mode=args.ecc_mode,
-            extra_metadata={"protocol_id": "native_identity_v1_20260522", "sample_index": sample_index},
-        )
-        record_path = record_dir / f"{generated['image_id']}.json"
-        record = json.loads(record_path.read_text(encoding="utf-8"))
-        decoded = service.decode(record)
-        metrics = decoded["metrics"]
-        row = {
-            "method": "mddm",
-            "sample_index": sample_index,
-            "prompt": prompt,
-            "seed": sample_index,
-            "steps": args.steps,
-            "guidance_scale": args.guidance_scale,
-            "ecc_mode": args.ecc_mode,
-            "payload_bytes": len(message.encode("ascii")),
-            "payload_bits": metrics["payload_bits"],
-            "encoded_bits": metrics["encoded_bits"],
-            "bit_errors": metrics["bit_errors"],
-            "bit_accuracy": metrics["bit_accuracy"],
-            "ber": metrics["ber"],
-            "exact_match": metrics["exact_match"],
-            "image_path": record["image_path"],
-            "record_path": str(record_path),
-            "runtime_s": time.perf_counter() - started,
-        }
-        append_row(csv_path, row)
-        print(
-            f"[mddm] {sample_index + 1}/{args.count} "
-            f"acc={row['bit_accuracy']:.6f} exact={row['exact_match']} runtime={row['runtime_s']:.2f}s",
-            flush=True,
-        )
+        stage = "init"
+        try:
+            stage = "payload"
+            if args.payload_bytes is None:
+                message = str(messages[sample_index]["payload_text"])
+            else:
+                message = printable_ascii_payload("mddm", sample_index, args.payload_bytes)
+            prompt = prompts[sample_index % len(prompts)]
+            stage = "generate"
+            generated = service.generate(
+                prompt=prompt,
+                hidden_message=message,
+                seed=sample_index,
+                num_steps=args.steps,
+                guidance_scale=args.guidance_scale,
+                negative_prompt=None,
+                ecc_mode=args.ecc_mode,
+                extra_metadata={"protocol_id": "native_identity_v1_20260522", "sample_index": sample_index},
+            )
+            stage = "decode"
+            record_path = record_dir / f"{generated['image_id']}.json"
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            decoded = service.decode(record)
+            metrics = decoded["metrics"]
+            row = {
+                "method": "mddm",
+                "sample_index": sample_index,
+                "prompt": prompt,
+                "seed": sample_index,
+                "steps": args.steps,
+                "guidance_scale": args.guidance_scale,
+                "ecc_mode": args.ecc_mode,
+                "payload_bytes": len(message.encode("ascii")),
+                "payload_bits": metrics["payload_bits"],
+                "encoded_bits": metrics["encoded_bits"],
+                "bit_errors": metrics["bit_errors"],
+                "bit_accuracy": metrics["bit_accuracy"],
+                "ber": metrics["ber"],
+                "exact_match": metrics["exact_match"],
+                "image_path": record["image_path"],
+                "record_path": str(record_path),
+                "runtime_s": time.perf_counter() - started,
+            }
+            append_row(csv_path, row)
+            print(
+                f"[mddm] {sample_index + 1}/{args.count} "
+                f"acc={row['bit_accuracy']:.6f} exact={row['exact_match']} runtime={row['runtime_s']:.2f}s",
+                flush=True,
+            )
+        except Exception as exc:
+            append_failure(
+                failures_path,
+                {
+                    "method": "mddm",
+                    "sample_index": sample_index,
+                    "stage": stage,
+                    "error_type": type(exc).__name__,
+                    "error_summary": summarize_exception(exc),
+                    "traceback_summary": traceback.format_exc(limit=4).strip()[-2000:],
+                    "runtime_s": time.perf_counter() - started,
+                    "created_at_utc": datetime.now(timezone.utc).isoformat(),
+                },
+            )
+            print(f"[mddm] {sample_index + 1}/{args.count} FAILED stage={stage}: {exc}", flush=True)
 
     manifest = {
         "method": "mddm",
@@ -174,6 +228,7 @@ def main() -> None:
         "payload_file": str(protocol_dir / "mddm_messages_500.jsonl"),
         "prompt_file": str(protocol_dir / "prompts_500.txt"),
         "results_csv": str(csv_path),
+        "failures_csv": str(failures_path),
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
     }
     (out / "manifest.json").write_text(json.dumps(manifest, indent=2), encoding="utf-8")

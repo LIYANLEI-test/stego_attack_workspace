@@ -24,13 +24,80 @@ acceptable unless explicitly recorded as a non-paper variant.
 
 | Method | Status | Runnable entry | Large assets |
 |---|---|---|---|
-| CRoSS | `native_official` | `scripts/generate_cross_sample.py` | SD1.5 diffusers cache under `/data2/liyanlei/huggingface` |
-| Pulsar | `native_official` | `scripts/run_pulsar_native_regions_sample.py` | Google DDPM cache under `/data2/liyanlei/huggingface` |
-| GSD | `native_official` | `scripts/run_gsd_native_smoke.sh` | DDPM and CelebA-64 checkpoints under `/data2/liyanlei/stego_attack_models/gsd` |
-| MAS/GRDH | `native_official` | `scripts/run_mas_grdh_native_smoke.sh` | SD1.5 `.ckpt` and CLIP under `/data2/liyanlei/stego_attack_models/mas_grdh` |
-| MDDM | `native_third_party` | `scripts/run_mddm_thirdparty_sample.py` | SD1.5 diffusers cache under `/data2/liyanlei/huggingface` |
-| Diffusion-Stego | `nsdser_reference` | `scripts/run_diffusion_stego_nsdser_sample.py` | NS-DSer local SD1.5 and `/data2/liyanlei/huggingface` |
-| RGS | `native_official` | `scripts/run_rgs_native_sample.py` | VQGAN, SD1.5-bin, and CLIP under `/data2/liyanlei/stego_attack_models` |
+| CRoSS | `native_official` | `scripts/run_cross_identity.py` | SD1.5 diffusers cache under `/data2/liyanlei/huggingface` |
+| Pulsar | `native_official` | `scripts/run_pulsar_identity.py` | Google DDPM cache under `/data2/liyanlei/huggingface` |
+| GSD | `native_official` | `scripts/run_gsd_identity.py` | DDPM and CelebA-64 checkpoints under `/data2/liyanlei/stego_attack_models/gsd` |
+| MAS/GRDH | `native_official` | `scripts/run_mas_grdh_identity.py` | SD1.5 `.ckpt` and CLIP under `/data2/liyanlei/stego_attack_models/mas_grdh` |
+| MDDM | `native_third_party` | `scripts/run_mddm_identity.py` | SD1.5 diffusers cache under `/data2/liyanlei/huggingface` |
+| Diffusion-Stego | `nsdser_reference` | `scripts/run_diffusion_stego_identity.py` | NS-DSer local SD1.5 and `/data2/liyanlei/huggingface` |
+| RGS | `native_official` | `scripts/run_rgs_identity.py` | VQGAN, SD1.5-bin, and CLIP under `/data2/liyanlei/stego_attack_models` |
+
+## Identity Run Status
+
+Protocol:
+
+```text
+/data2/liyanlei/stego_attack_data/protocols/native_identity_v1_20260522
+```
+
+Result root:
+
+```text
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522
+```
+
+Completed formal or formal-like identity records:
+
+```text
+pulsar/identity_results.csv
+  461 successful samples, all exact; 39 native failures recorded in identity_failures.csv.
+  Total recorded: 500/500 sample indices.
+
+diffusion_stego_mn_projection/identity_results.csv
+diffusion_stego_mb_projection/identity_results.csv
+diffusion_stego_mc_projection/identity_results.csv
+diffusion_stego_multi_bits_projection/identity_results.csv
+  500/500 exact for each projection-only variant.
+  These are reference Projection encode/decode checks, not full SD image generation/recovery runs.
+```
+
+Active jobs started on 2026-05-24:
+
+```text
+cross       100 images, 50 DDIM steps, official demo path
+rgs         100 images, 50 steps, official hide_and_reveal.py with identity_only
+gsd_cifar10 500 messages, 1000 timesteps, native sample_reverse_dct path
+mas_grdh    500 messages, DPM steps 20, scale 5.0, identity attack layer
+```
+
+Logs and PID files:
+
+```text
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/cross_identity.log
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/cross_identity.pid
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/rgs_identity.log
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/rgs_identity.pid
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/gsd_cifar10_identity.log
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/gsd_cifar10_identity.pid
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/mas_grdh_identity.log
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/mas_grdh_identity.pid
+```
+
+MDDM remains a third-party pilot path. Earlier 2048-byte and 256-byte runs were
+not reliably exact, so do not treat full-size MDDM identity as complete without
+a larger successful pilot and a clear `native_third_party` label.
+
+Active MDDM pilot:
+
+```text
+mddm_128_pilot 50 messages, 128 printable ASCII bytes, steps 20, guidance scale 1.0
+log: /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/mddm_128_pilot.log
+pid: /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/mddm_128_pilot.pid
+```
+
+This pilot is not a formal identity success criterion. Early samples include
+high-accuracy non-exact recoveries, so MDDM needs further capacity/parameter
+work before any exact identity claim.
 
 ## Verified Smokes
 

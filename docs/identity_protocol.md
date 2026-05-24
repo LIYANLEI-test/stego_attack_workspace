@@ -58,3 +58,22 @@ Generated protocol files:
 /data2/liyanlei/stego_attack_data/protocols/native_identity_v1_20260522/prompts_500.txt
 /data2/liyanlei/stego_attack_data/protocols/native_identity_v1_20260522/image_payloads_100.csv
 ```
+
+## Payload And Paper Semantics
+
+The protocol keeps each method's native payload shape:
+
+```text
+Pulsar uses the per-sample Sage/region capacity estimated by the official path.
+GSD uses the DCT sign tensor shape used by sample_reverse_dct.
+MAS/GRDH uses the 1-bit-per-latent-element message used by the official mapping module.
+Diffusion-Stego uses the NS-DSer Projection secret shape for each mapping.
+CRoSS and RGS use full secret images instead of bit strings.
+```
+
+The runners replace random payload generation with deterministic protocol
+payloads so results are comparable and resumable. They should not change
+embedding, sampling, inversion, decoding, ECC, or metric semantics. If a method
+does not have an integrated official repository, the result label must say so;
+currently that applies to MDDM (`native_third_party`) and Diffusion-Stego
+(`nsdser_reference`).

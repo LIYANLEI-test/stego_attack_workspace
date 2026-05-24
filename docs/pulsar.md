@@ -69,3 +69,18 @@ message match: true
 ```
 
 Large model files are cached under `/data2/liyanlei/huggingface`.
+
+## Identity Result
+
+The 500-sample protocol run is complete:
+
+```text
+output: /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/pulsar
+identity_results.csv: 461 successful samples, 461/461 exact
+identity_failures.csv: 39 native failures
+total recorded: 500/500 sample indices
+```
+
+Failures occurred inside native region estimation or Sage decoding, primarily
+because some samples exceeded the code's decoding radius. They are recorded as
+method failures, not runner crashes.

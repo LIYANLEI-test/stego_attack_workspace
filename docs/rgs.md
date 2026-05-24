@@ -22,15 +22,15 @@ destroy.
 
 ## Native Path
 
-Run through the workspace wrapper:
+Run through the identity runner:
 
 ```sh
 cd /home/liyanlei/work/stego_attack_workspace
 env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
   /data2/liyanlei/envs/stego_attack/bin/python \
-  scripts/run_rgs_native_sample.py \
-  --steps 2 --hide-only \
-  --output-dir /data2/liyanlei/stego_attack_data/baselines/rgs/native_official_hideonly_2step
+  scripts/run_rgs_identity.py \
+  --count 100 --steps 50 \
+  --output-dir /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/rgs
 ```
 
 The wrapper calls the official:
@@ -39,7 +39,10 @@ The wrapper calls the official:
 references/RGS/hide_and_reveal.py
 ```
 
-Local edits only parameterize hardcoded model/output paths.
+Local compatibility patch only parameterizes hardcoded model/output paths,
+step count, output directory, and whether built-in JPEG/Gaussian robustness
+attacks are skipped. The identity run uses `--identity_only`, so it reveals the
+unmodified stego image.
 
 Verified smoke output:
 
@@ -52,6 +55,10 @@ Verified smoke output:
 The verified smoke used `--steps 2 --hide-only`, so it proves the official hide
 path can generate a stego image and save the latent/noise side data. For reveal
 quality tests, use the same runner with more steps and without `--hide-only`.
+
+The 2-step identity reveal smoke completed with `indice_acc` about `0.80078`
+and recovery PSNR about `19.434`. That is a short-step pilot, not a formal
+quality claim.
 
 ## Assets
 

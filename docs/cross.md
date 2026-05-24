@@ -16,23 +16,28 @@ https://github.com/yujiwen/CRoSS
 
 ## Native Path
 
-The workspace runner calls the official `demo.py` directly and only adds cache,
-output-directory, and manifest handling:
+The identity runner imports the official `demo.py`, constructs
+`demo.ODESolve`, and calls the same image-to-noise-to-image and reveal sequence
+used by the official demo. It only adds protocol image selection, cache setup,
+output-directory handling, CSV rows, and a manifest:
 
 ```sh
 cd /home/liyanlei/work/stego_attack_workspace
 env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
   /data2/liyanlei/envs/stego_attack/bin/python \
-  scripts/generate_cross_sample.py
+  scripts/run_cross_identity.py \
+  --count 100 --num-steps 50 \
+  --output-dir /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/cross
 ```
 
 Default output:
 
 ```text
-/data2/liyanlei/stego_attack_data/baselines/cross/native_official/sample_000001/gt.png
-/data2/liyanlei/stego_attack_data/baselines/cross/native_official/sample_000001/hide.png
-/data2/liyanlei/stego_attack_data/baselines/cross/native_official/sample_000001/reverse.png
-/data2/liyanlei/stego_attack_data/baselines/cross/native_official/sample_000001/manifest.json
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/cross/samples/<index>/gt.png
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/cross/samples/<index>/hide.png
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/cross/samples/<index>/reverse.png
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/cross/identity_results.csv
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/cross/manifest.json
 ```
 
 The compatibility shell entry is:
@@ -50,6 +55,10 @@ Previous quick smoke:
 /data2/liyanlei/stego_attack_data/baselines/cross/native_official_smoke_2step/reverse.png
 /data2/liyanlei/stego_attack_data/baselines/cross/native_official_smoke_2step/manifest.json
 ```
+
+The 2-step identity smoke produced non-exact pixel recovery with PSNR around
+`22.859`, which is expected for a very short DDIM run and is not a runner
+failure.
 
 ## Notes
 

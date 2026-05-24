@@ -75,3 +75,29 @@ This is a path compatibility link only; it does not alter the GSD method.
 Previous CIFAR10 native smoke completed `--reverse_dct` sampling with 2
 timesteps and printed bit accuracy around `0.9166`. This is a wiring check; use
 the intended native checkpoint/config and more timesteps for formal evaluation.
+
+## Identity Runner
+
+The identity runner mirrors the official `sample_reverse_dct` logic: DCT-domain
+sign payload, DDPM sampling, image quantization, DDIM reverse, and DCT sign
+extraction. The only semantic substitution is that protocol bits replace the
+official function's `np.random.randint` secret so samples are deterministic and
+comparable.
+
+Formal CIFAR10 command:
+
+```sh
+cd /home/liyanlei/work/stego_attack_workspace
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  /data2/liyanlei/envs/stego_attack/bin/python \
+  scripts/run_gsd_identity.py \
+  --count 500 --timesteps 1000 --save-images \
+  --output-dir /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/gsd_cifar10
+```
+
+Output:
+
+```text
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/gsd_cifar10/identity_results.csv
+/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/gsd_cifar10/manifest.json
+```
