@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -64,6 +65,22 @@ def result_total(out_dir: Path) -> int:
         with path.open("r", encoding="utf-8", newline="") as handle:
             total += sum(1 for _ in csv.DictReader(handle))
     return total
+
+
+def lock_dir(out_dir: Path) -> Path:
+    return out_dir.with_name(out_dir.name + ".running")
+
+
+def try_lock(out_dir: Path) -> bool:
+    try:
+        lock_dir(out_dir).mkdir()
+        return True
+    except FileExistsError:
+        return False
+
+
+def unlock(out_dir: Path) -> None:
+    shutil.rmtree(lock_dir(out_dir), ignore_errors=True)
 
 
 def base_env(gpu: str) -> dict[str, str]:
@@ -201,10 +218,7 @@ def main() -> int:
     gpus = [gpu.strip() for gpu in args.gpus.split(",") if gpu.strip()]
     attacks = [attack.strip() for attack in args.attacks.split(",") if attack.strip()]
     methods = [method.strip() for method in args.methods.split(",") if method.strip()]
-    pending = [
-        job for job in make_jobs(attacks, methods, args.count)
-        if args.force or result_total(root / job.name) < args.count
-    ]
+    pending = make_jobs(attacks, methods, args.count)
     print(f"[queue] root={root}")
     print(f"[queue] pending={len(pending)} gpus={','.join(gpus)}", flush=True)
 
@@ -214,8 +228,19 @@ def main() -> int:
         for gpu in gpus:
             if gpu in active or not pending:
                 continue
-            job = pending.pop(0)
-            out_dir = root / job.name
+            job = None
+            out_dir = None
+            while pending:
+                candidate = pending.pop(0)
+                candidate_out = root / candidate.name
+                if not args.force and result_total(candidate_out) >= args.count:
+                    continue
+                if try_lock(candidate_out):
+                    job = candidate
+                    out_dir = candidate_out
+                    break
+            if job is None or out_dir is None:
+                continue
             out_dir.mkdir(parents=True, exist_ok=True)
             log_path = logs / f"{job.name}.log"
             log_handle = log_path.open("ab")
@@ -242,6 +267,7 @@ def main() -> int:
             print(f"[queue] DONE gpu={gpu} job={job.name} exit={code} records={total}", flush=True)
             if code != 0:
                 failures.append((job, code))
+            unlock(root / job.name)
             del active[gpu]
 
     if failures:
