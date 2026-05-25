@@ -74,6 +74,8 @@ initial jobs: cross_resize_0_5_100, gsd_cifar10_resize_0_5_500, mas_grdh_resize_
 - `scripts/run_unified_attack_queue.py` compiles.
 - Queue expansion passes a command-shape check for resize, storage, and lossy
   attack flags.
+- `scripts/summarize_unified_attack_runs.py` summarizes live or completed run
+  roots and excludes zero-bit Pulsar rows from bit-accuracy means.
 - Result directories are considered complete when results plus failures equal
   the per-method target count and sample IDs have no duplicates.
 - Final docs summarize counts, failures, and primary metrics without committing
