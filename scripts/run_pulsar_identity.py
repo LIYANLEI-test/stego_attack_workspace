@@ -159,7 +159,7 @@ def main() -> None:
     out = Path(args.output_dir).resolve()
     image_dir = out / "images"
     out.mkdir(parents=True, exist_ok=True)
-    if args.save_images or args.attack_kind in {"resize", "storage"}:
+    if args.save_images or args.attack_kind != "identity":
         image_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out / "identity_results.csv"
@@ -209,7 +209,7 @@ def main() -> None:
             hidden = generated["samples"][last]["hidden"]
             image_path = ""
             attacked_path = ""
-            if args.save_images or args.attack_kind in {"resize", "storage"}:
+            if args.save_images or args.attack_kind != "identity":
                 stage = "save_reload_image"
                 image_path = str(image_dir / f"{sample_index:06d}.png")
                 stego.save_sample(hidden, image_path, dtype=sample_dtype)
