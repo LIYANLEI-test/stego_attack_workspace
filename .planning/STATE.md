@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-05-25 - Initialized GSD planning state manually because `gsd-sdk` wrapper points to a missing install path.
+Last activity: 2026-05-25 - Ran MAS/GRDH native resize attack pilot and documented results.
 
 Progress: [=---------] 5%
 
@@ -55,7 +55,13 @@ Result root: `/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20
 - MAS/GRDH: complete, 500/500 records, mean bit accuracy about 0.958.
 - MDDM 128-byte pilot: complete as pilot only, 50/50 records, 32 exact, mean bit accuracy about 0.999.
 - Diffusion-Stego projection variants: complete projection-only checks, 500/500 exact for MN/MB/MC/Multi-bits.
-- RGS: running, 62/100 records as of 2026-05-25 17:15 CST; PID 22714; mean recovery PSNR about 23.015 dB and mean indice accuracy about 0.993.
+- RGS: running, 82/100 records as of 2026-05-25 23:16 CST; PID 22714; mean recovery PSNR about 23.119 dB and mean indice accuracy about 0.994.
+
+### Quick Tasks Completed
+
+| Date | Task | Result |
+|------|------|--------|
+| 2026-05-25 | MAS/GRDH resize attack pilot | 10/10 rows, 0 failures, factor 0.5, mean bit accuracy 0.890216 vs same-sample identity 0.953400 |
 
 ### Pending Todos
 
@@ -74,6 +80,6 @@ None in `.planning/todos/pending/` yet.
 
 ## Session Continuity
 
-Last session: 2026-05-25 17:15 CST
-Stopped at: GSD planning state initialized; next action is validate files, commit, and push.
+Last session: 2026-05-25 23:16 CST
+Stopped at: MAS/GRDH resize pilot documented; next action is decide whether to expand to more resize factors or a larger sample count.
 Resume file: None

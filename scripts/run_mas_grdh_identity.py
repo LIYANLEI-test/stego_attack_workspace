@@ -270,6 +270,7 @@ def main() -> None:
 
                         stage = "attack_layer"
                         tmp_name = str(out / "tmp" / f"{sample_index:06d}_{args.attack_layer}")
+                        Path(tmp_name).parent.mkdir(parents=True, exist_ok=True)
                         x0_samples = attack_func(x0_samples, factor=args.attack_factor, tmp_image_name=tmp_name).to(device)
 
                         stage = "vae_encode"
