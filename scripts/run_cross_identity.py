@@ -11,6 +11,7 @@ import time
 from pathlib import Path
 
 import cv2
+import numpy as np
 
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +34,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
+from attack_common import resize_roundtrip_array_rgb  # noqa: E402
 
 
 DEFAULT_CROSS_REF = WORKSPACE_ROOT / "references" / "CRoSS"
@@ -49,6 +51,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--private-key", default="Effiel tower")
     parser.add_argument("--public-key", default="a tree")
     parser.add_argument("--num-steps", type=int, default=50)
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--hf-cache-dir", default=str(DEFAULT_HF_HOME))
     parser.add_argument("--hf-endpoint", default="https://hf-mirror.com")
     parser.add_argument("--force", action="store_true")
@@ -73,7 +77,7 @@ def load_cross_demo(args: argparse.Namespace, reference_dir: Path):
     return cross_demo
 
 
-def run_cross(cross_demo, ode, args: argparse.Namespace, secret_path: Path, sample_dir: Path) -> None:
+def run_cross(cross_demo, ode, args: argparse.Namespace, secret_path: Path, sample_dir: Path) -> dict[str, str]:
     sample_dir.mkdir(parents=True, exist_ok=True)
     image_gt, _, _ = cross_demo.load_image(str(secret_path), 0, 0, 0, 0, resize=True)
     image_gt_latent = ode.image2latent(image_gt)
@@ -84,11 +88,24 @@ def run_cross(cross_demo, ode, args: argparse.Namespace, secret_path: Path, samp
     image_hide = ode.latent2image(image_hide_latent)
     cv2.imwrite(str(sample_dir / "hide.png"), cv2.cvtColor(image_hide, cv2.COLOR_RGB2BGR))
 
-    image_hide_latent_reveal = ode.image2latent(image_hide)
+    attacked_path = ""
+    image_for_reveal = image_hide
+    if args.attack_kind == "resize":
+        image_for_reveal = resize_roundtrip_array_rgb(np.asarray(image_hide, dtype=np.uint8), args.resize_factor)
+        attacked_path = str(sample_dir / f"hide_resize_{args.resize_factor:g}.png")
+        cv2.imwrite(attacked_path, cv2.cvtColor(image_for_reveal, cv2.COLOR_RGB2BGR))
+
+    image_hide_latent_reveal = ode.image2latent(image_for_reveal)
     latent_noise = ode.invert(args.public_key, image_hide_latent_reveal, is_forward=True)
     image_reverse_latent = ode.invert(args.private_key, latent_noise, is_forward=False)
     image_reverse = ode.latent2image(image_reverse_latent)
     cv2.imwrite(str(sample_dir / "reverse.png"), cv2.cvtColor(image_reverse, cv2.COLOR_RGB2BGR))
+    return {
+        "stego_path": str(sample_dir / "hide.png"),
+        "attacked_path": attacked_path,
+        "recovered_path": str(sample_dir / "reverse.png"),
+        "gt_path": str(sample_dir / "gt.png"),
+    }
 
 
 def main() -> None:
@@ -122,13 +139,15 @@ def main() -> None:
             secret_path = Path(payloads[sample_index]["secret_image_path"]).resolve()
             sample_dir = sample_root / f"{sample_index:06d}"
             stage = "official_demo"
-            run_cross(cross_demo, ode, args, secret_path, sample_dir)
-            recovered_path = sample_dir / "reverse.png"
-            stego_path = sample_dir / "hide.png"
-            gt_path = sample_dir / "gt.png"
+            paths = run_cross(cross_demo, ode, args, secret_path, sample_dir)
+            recovered_path = Path(paths["recovered_path"])
+            stego_path = Path(paths["stego_path"])
+            attacked_path = Path(paths["attacked_path"]) if paths["attacked_path"] else None
+            gt_path = Path(paths["gt_path"])
             stage = "metrics"
             recovered_metrics = image_metrics(secret_path, recovered_path)
             gt_metrics = image_metrics(secret_path, gt_path)
+            attack_metrics = image_metrics(stego_path, attacked_path) if attacked_path else {}
             row = {
                 "method": "cross",
                 "variant": "official_demo",
@@ -136,6 +155,12 @@ def main() -> None:
                 "secret_image_path": str(secret_path),
                 "gt_path": str(gt_path),
                 "stego_path": str(stego_path),
+                "attack_kind": args.attack_kind,
+                "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "attacked_path": str(attacked_path) if attacked_path else "",
+                "attack_mse": attack_metrics.get("mse", ""),
+                "attack_psnr": attack_metrics.get("psnr", ""),
+                "attack_ssim": attack_metrics.get("ssim", ""),
                 "recovered_path": str(recovered_path),
                 "private_key": args.private_key,
                 "public_key": args.public_key,
@@ -183,6 +208,8 @@ def main() -> None:
         "private_key": args.private_key,
         "public_key": args.public_key,
         "num_steps": args.num_steps,
+        "attack_kind": args.attack_kind,
+        "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
         "results_csv": str(csv_path),
         "failures_csv": str(failures_path),
         "created_at_utc": utc_now(),

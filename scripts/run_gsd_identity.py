@@ -37,6 +37,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
+from attack_common import resize_roundtrip_tensor_0_1  # noqa: E402
 
 
 DEFAULT_GSD_ROOT = WORKSPACE_ROOT / "references" / "GSD"
@@ -60,6 +61,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--save-images", action="store_true")
     parser.add_argument("--skip-image", action="store_true", help="Only test official DCT mapping/extraction.")
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
 
@@ -226,7 +229,13 @@ def main() -> None:
                     if args.save_images:
                         image_path = str(image_dir / f"stego_{sample_index:06d}.png")
                         tvu.save_image(x0[0], image_path)
-                    x_steg = torch.round(x0 * 255).clamp(0, 255)
+                    if args.attack_kind == "resize":
+                        x0_for_recovery = resize_roundtrip_tensor_0_1(x0, args.resize_factor)
+                        if args.save_images:
+                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_resize_{args.resize_factor:g}.png")
+                    else:
+                        x0_for_recovery = x0
+                    x_steg = torch.round(x0_for_recovery * 255).clamp(0, 255)
                     x0_dequan = x_steg / 127.5 - 1
 
                     stage = "ddim_reverse"
@@ -249,6 +258,8 @@ def main() -> None:
                 "sample_type": args.sample_type,
                 "skip_type": args.skip_type,
                 "use_ownmodel": args.use_ownmodel,
+                "attack_kind": args.attack_kind,
+                "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
                 "payload_bits": len(payload_bits),
                 "payload_sha256": bits_sha256(payload_bits),
                 "clean_bit_errors": clean["bit_errors"],
@@ -303,6 +314,8 @@ def main() -> None:
         "sample_type": args.sample_type,
         "skip_type": args.skip_type,
         "use_ownmodel": args.use_ownmodel,
+        "attack_kind": args.attack_kind,
+        "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
         "skip_image": args.skip_image,
         "results_csv": str(csv_path),
         "failures_csv": str(failures_path),
@@ -319,4 +332,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

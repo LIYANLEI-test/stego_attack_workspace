@@ -38,6 +38,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
+from attack_common import resize_roundtrip_tensor_minus1_1  # noqa: E402
 
 
 DEFAULT_MAS_ROOT = WORKSPACE_ROOT / "references" / "mas_GRDH"
@@ -66,6 +67,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bit-num", type=int, default=1)
     parser.add_argument("--attack-layer", default="identity")
     parser.add_argument("--attack-factor", type=float, default=0.0)
+    parser.add_argument("--attack-kind", default="native", choices=["native", "identity", "resize"])
+    parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--precision", default="autocast", choices=["full", "autocast"])
     parser.add_argument("--gpu", default="cuda:0")
     parser.add_argument("--save-images", action="store_true")
@@ -269,9 +272,14 @@ def main() -> None:
                             save_tensor_image(model, x0_samples, Path(image_path))
 
                         stage = "attack_layer"
-                        tmp_name = str(out / "tmp" / f"{sample_index:06d}_{args.attack_layer}")
-                        Path(tmp_name).parent.mkdir(parents=True, exist_ok=True)
-                        x0_samples = attack_func(x0_samples, factor=args.attack_factor, tmp_image_name=tmp_name).to(device)
+                        if args.attack_kind == "resize":
+                            x0_samples = resize_roundtrip_tensor_minus1_1(x0_samples, args.resize_factor).to(device)
+                        elif args.attack_kind == "identity":
+                            pass
+                        else:
+                            tmp_name = str(out / "tmp" / f"{sample_index:06d}_{args.attack_layer}")
+                            Path(tmp_name).parent.mkdir(parents=True, exist_ok=True)
+                            x0_samples = attack_func(x0_samples, factor=args.attack_factor, tmp_image_name=tmp_name).to(device)
 
                         stage = "vae_encode"
                         init_latent_hat = model.get_first_stage_encoding(model.encode_first_stage(x0_samples))
@@ -321,6 +329,8 @@ def main() -> None:
                 "scale": args.scale,
                 "attack_layer": args.attack_layer,
                 "attack_factor": args.attack_factor,
+                "attack_kind": args.attack_kind,
+                "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
                 "bit_num": bits,
                 "payload_bits": len(payload_bits),
                 "payload_sha256": bits_sha256(payload_bits),
@@ -378,6 +388,8 @@ def main() -> None:
         "scale": args.scale,
         "attack_layer": args.attack_layer,
         "attack_factor": args.attack_factor,
+        "attack_kind": args.attack_kind,
+        "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
         "mapping_func": args.mapping_func,
         "bit_num": args.bit_num,
         "skip_image": args.skip_image,

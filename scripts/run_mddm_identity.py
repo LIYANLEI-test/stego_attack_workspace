@@ -19,6 +19,10 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 MDDM_REF = WORKSPACE_ROOT / "references" / "MDDM-thirdparty"
 if str(MDDM_REF) not in sys.path:
     sys.path.insert(0, str(MDDM_REF))
+if str(WORKSPACE_ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(WORKSPACE_ROOT / "scripts"))
+
+from attack_common import resize_roundtrip_pil  # noqa: E402
 
 
 DEFAULT_PROTOCOL_DIR = Path("/data2/liyanlei/stego_attack_data/protocols/native_identity_v1_20260522")
@@ -43,6 +47,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-id", default="runwayml/stable-diffusion-v1-5")
     parser.add_argument("--hf-cache-dir", default="/data2/liyanlei/huggingface")
     parser.add_argument("--hf-endpoint", default="https://hf-mirror.com")
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
 
@@ -172,7 +178,17 @@ def main() -> None:
             stage = "decode"
             record_path = record_dir / f"{generated['image_id']}.json"
             record = json.loads(record_path.read_text(encoding="utf-8"))
-            decoded = service.decode(record)
+            image_override = None
+            attacked_path = ""
+            if args.attack_kind == "resize":
+                stage = "resize_attack"
+                from PIL import Image
+
+                image_override = resize_roundtrip_pil(Image.open(record["image_path"]), args.resize_factor)
+                attacked_path = str(image_dir / f"{generated['image_id']}_resize_{args.resize_factor:g}.png")
+                image_override.save(attacked_path)
+            stage = "decode"
+            decoded = service.decode(record, image_override=image_override)
             metrics = decoded["metrics"]
             row = {
                 "method": "mddm",
@@ -189,7 +205,10 @@ def main() -> None:
                 "bit_accuracy": metrics["bit_accuracy"],
                 "ber": metrics["ber"],
                 "exact_match": metrics["exact_match"],
+                "attack_kind": args.attack_kind,
+                "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
                 "image_path": record["image_path"],
+                "attacked_path": attacked_path,
                 "record_path": str(record_path),
                 "runtime_s": time.perf_counter() - started,
             }
@@ -224,6 +243,8 @@ def main() -> None:
         "guidance_scale": args.guidance_scale,
         "ecc_mode": args.ecc_mode,
         "payload_bytes_override": args.payload_bytes,
+        "attack_kind": args.attack_kind,
+        "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
         "model_id": args.model_id,
         "payload_file": str(protocol_dir / "mddm_messages_500.jsonl"),
         "prompt_file": str(protocol_dir / "prompts_500.txt"),

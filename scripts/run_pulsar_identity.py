@@ -14,6 +14,8 @@ import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
+import numpy as np
+
 WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 if str(WORKSPACE_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT / "scripts"))
@@ -26,6 +28,7 @@ from pulsar_native_utils import (  # noqa: E402
     ensure_hf_cache,
     load_official_pulsar,
 )
+from attack_common import resize_roundtrip_file  # noqa: E402
 
 
 PROTOCOL_SEED = "stego-attack-native-identity-v1-20260522"
@@ -53,6 +56,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hf-endpoint", default=DEFAULT_HF_ENDPOINT)
     parser.add_argument("--sage-bin", default="/data2/liyanlei/envs/stego_attack/bin/sage")
     parser.add_argument("--save-images", action="store_true")
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--resize-factor", type=float, default=1.0)
+    parser.add_argument("--sample-dtype", default="uint16", choices=["uint8", "uint16"])
     parser.add_argument("--force", action="store_true")
     parser.add_argument(
         "--retry-failures",
@@ -110,6 +116,9 @@ def append_failure(csv_path: Path, row: dict[str, object]) -> None:
         "hist_bins",
         "payload_bytes",
         "payload_sha256",
+        "attack_kind",
+        "resize_factor",
+        "sample_dtype",
         "stage",
         "error_type",
         "error_summary",
@@ -148,7 +157,7 @@ def main() -> None:
     out = Path(args.output_dir).resolve()
     image_dir = out / "images"
     out.mkdir(parents=True, exist_ok=True)
-    if args.save_images:
+    if args.save_images or args.attack_kind == "resize":
         image_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out / "identity_results.csv"
@@ -169,6 +178,7 @@ def main() -> None:
         key=args.key.encode("utf-8").ljust(64, b"\x00")[:64],
         benchmarks=False,
     )
+    sample_dtype = np.uint8 if args.sample_dtype == "uint8" else np.uint16
 
     for sample_index in range(args.start_index, args.count):
         if sample_index in done:
@@ -196,11 +206,19 @@ def main() -> None:
             last = stego.scheduler.num_inference_steps - 1
             hidden = generated["samples"][last]["hidden"]
             image_path = ""
-            if args.save_images:
+            attacked_path = ""
+            if args.save_images or args.attack_kind == "resize":
                 stage = "save_reload_image"
                 image_path = str(image_dir / f"{sample_index:06d}.png")
-                stego.save_sample(hidden, image_path)
-                hidden = stego.load_sample(image_path)
+                stego.save_sample(hidden, image_path, dtype=sample_dtype)
+                load_path = image_path
+                if args.attack_kind == "resize":
+                    stage = "resize_attack"
+                    attacked_path = str(image_dir / f"{sample_index:06d}_resize_{args.resize_factor:g}.png")
+                    resize_roundtrip_file(Path(image_path), Path(attacked_path), args.resize_factor)
+                    load_path = attacked_path
+                stage = "load_attacked_image"
+                hidden = stego.load_sample(load_path, dtype=sample_dtype)
             stage = "reveal_with_regions"
             recovered = stego.reveal_with_regions(hidden)
             recovered = recovered[: len(message)]
@@ -221,7 +239,11 @@ def main() -> None:
                 "bit_count": bit_count,
                 "bit_accuracy": bit_acc,
                 "exact_match": recovered == message,
+                "attack_kind": args.attack_kind,
+                "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "sample_dtype": args.sample_dtype,
                 "image_path": image_path,
+                "attacked_path": attacked_path,
                 "runtime_s": time.perf_counter() - started,
             }
             append_row(csv_path, row)
@@ -241,6 +263,9 @@ def main() -> None:
                 "hist_bins": args.hist_bins,
                 "payload_bytes": capacity if capacity is not None else "",
                 "payload_sha256": hashlib.sha256(message).hexdigest() if message else "",
+                "attack_kind": args.attack_kind,
+                "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "sample_dtype": args.sample_dtype,
                 "stage": stage,
                 "error_type": type(exc).__name__,
                 "error_summary": summarize_exception(exc),
@@ -265,6 +290,9 @@ def main() -> None:
         "steps": args.steps,
         "region_estimate_samples": args.region_estimate_samples,
         "hist_bins": args.hist_bins,
+        "attack_kind": args.attack_kind,
+        "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
+        "sample_dtype": args.sample_dtype,
         "message_rule": "SHAKE256(protocol_seed | pulsar | sample_index | capacity_bytes)",
         "results_csv": str(csv_path),
         "failures_csv": str(failures_path),
