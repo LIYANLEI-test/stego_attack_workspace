@@ -100,9 +100,10 @@ def summarize_dir(path: Path) -> dict[str, object] | None:
     result_rows = read_rows(path / "identity_results.csv")
     failure_rows = read_rows(path / "identity_failures.csv")
     total = len(result_rows) + len(failure_rows)
-    metric_name = "bit_accuracy"
-    metric_value = mean_field(result_rows, "bit_accuracy")
-    if metric_value is None:
+    has_bit_accuracy = any("bit_accuracy" in row for row in result_rows)
+    metric_name = "bit_accuracy" if has_bit_accuracy else "recovery_psnr"
+    metric_value = mean_field(result_rows, metric_name)
+    if metric_value is None and not has_bit_accuracy:
         metric_name = "recovery_psnr"
         metric_value = mean_field(result_rows, "recovery_psnr")
     attack_psnr = mean_field(result_rows, "attack_psnr")
