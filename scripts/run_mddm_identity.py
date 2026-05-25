@@ -22,7 +22,7 @@ if str(MDDM_REF) not in sys.path:
 if str(WORKSPACE_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT / "scripts"))
 
-from attack_common import resize_roundtrip_pil  # noqa: E402
+from attack_common import resize_roundtrip_pil, storage_roundtrip_pil  # noqa: E402
 
 
 DEFAULT_PROTOCOL_DIR = Path("/data2/liyanlei/stego_attack_data/protocols/native_identity_v1_20260522")
@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-id", default="runwayml/stable-diffusion-v1-5")
     parser.add_argument("--hf-cache-dir", default="/data2/liyanlei/huggingface")
     parser.add_argument("--hf-endpoint", default="https://hf-mirror.com")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
@@ -186,6 +186,13 @@ def main() -> None:
 
                 image_override = resize_roundtrip_pil(Image.open(record["image_path"]), args.resize_factor)
                 attacked_path = str(image_dir / f"{generated['image_id']}_resize_{args.resize_factor:g}.png")
+                image_override.save(attacked_path)
+            elif args.attack_kind == "storage":
+                stage = "storage_attack"
+                from PIL import Image
+
+                image_override = storage_roundtrip_pil(Image.open(record["image_path"]))
+                attacked_path = str(image_dir / f"{generated['image_id']}_storage.png")
                 image_override.save(attacked_path)
             stage = "decode"
             decoded = service.decode(record, image_override=image_override)

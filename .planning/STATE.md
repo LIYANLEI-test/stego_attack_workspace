@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-05-26 - Ran unified resize attack pilot across runnable identity baselines and documented results.
+Last activity: 2026-05-26 - Ran unified storage attack pilot across non-RGS runnable identity baselines and documented results.
 
 Progress: [=---------] 5%
 
@@ -55,7 +55,7 @@ Result root: `/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20
 - MAS/GRDH: complete, 500/500 records, mean bit accuracy about 0.958.
 - MDDM 128-byte pilot: complete as pilot only, 50/50 records, 32 exact, mean bit accuracy about 0.999.
 - Diffusion-Stego projection variants: complete projection-only checks, 500/500 exact for MN/MB/MC/Multi-bits.
-- RGS: running, 96/100 records as of 2026-05-26 03:13 CST; PID 22714; mean recovery PSNR about 23.217 dB and mean indice accuracy about 0.994.
+- RGS: running, 97/100 records as of 2026-05-26 CST; PID 22714; mean recovery PSNR about 23.257 dB. RGS attacks are skipped for now because it is too slow.
 
 ### Current Unified Resize Attack Snapshot
 
@@ -73,12 +73,29 @@ method/factor.
 - RGS: not included in this quick pilot; needs a dedicated in-memory attack branch and is long-running.
 - Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
 
+### Current Unified Storage Attack Snapshot
+
+Result root: `/data2/liyanlei/stego_attack_data/attack_runs/unified_storage_20260526`
+
+Attack protocol: lossless PNG storage round trip before native reveal/recovery,
+10 samples per method. Pulsar uses its native 16-bit PNG save/reload path rather
+than generic 8-bit RGB PIL conversion.
+
+- CRoSS: complete, 10/10 rows and 0 failures; mean recovery PSNR 20.520565 dB and mean recovery SSIM 0.655835.
+- MAS/GRDH: complete, 10/10 rows and 0 failures; mean bit accuracy 0.951678.
+- GSD CIFAR10: complete, 10/10 rows and 0 failures; mean bit accuracy 0.891048.
+- Pulsar: complete, 10/10 rows and 0 failures; mean bit accuracy 1.000000 and exact 10/10.
+- MDDM 128-byte pilot: complete, 10/10 rows and 0 failures; mean bit accuracy 0.998535 and exact 7/10.
+- RGS: skipped per user instruction because it is too slow for attack runs on the current machine.
+- Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
 |------|------|--------|
 | 2026-05-25 | MAS/GRDH resize attack pilot | 10/10 rows, 0 failures, factor 0.5, mean bit accuracy 0.890216 vs same-sample identity 0.953400 |
 | 2026-05-26 | Unified resize attack pilot | Shared resize factors 0.5/0.75/1.25/1.5 ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; Pulsar failed native reveal for all attacked samples |
+| 2026-05-26 | Unified storage attack pilot | Shared storage round trip ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; all non-RGS methods completed 10/10 rows with 0 failures |
 
 ### Pending Todos
 
@@ -98,6 +115,6 @@ None in `.planning/todos/pending/` yet.
 
 ## Session Continuity
 
-Last session: 2026-05-26 03:13 CST
-Stopped at: Unified resize attack pilot complete for currently runnable reveal paths; next action is review whether to build the dedicated RGS resize attack branch or scale sample counts.
+Last session: 2026-05-26 CST
+Stopped at: Unified storage attack pilot complete for non-RGS runnable reveal paths; next action is decide whether to scale samples or add the next non-RGS attack.
 Resume file: None

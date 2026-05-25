@@ -8,6 +8,7 @@ import csv
 import hashlib
 import json
 import os
+import shutil
 import sys
 import time
 import traceback
@@ -56,7 +57,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hf-endpoint", default=DEFAULT_HF_ENDPOINT)
     parser.add_argument("--sage-bin", default="/data2/liyanlei/envs/stego_attack/bin/sage")
     parser.add_argument("--save-images", action="store_true")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--sample-dtype", default="uint16", choices=["uint8", "uint16"])
     parser.add_argument("--force", action="store_true")
@@ -157,7 +158,7 @@ def main() -> None:
     out = Path(args.output_dir).resolve()
     image_dir = out / "images"
     out.mkdir(parents=True, exist_ok=True)
-    if args.save_images or args.attack_kind == "resize":
+    if args.save_images or args.attack_kind in {"resize", "storage"}:
         image_dir.mkdir(parents=True, exist_ok=True)
 
     csv_path = out / "identity_results.csv"
@@ -207,7 +208,7 @@ def main() -> None:
             hidden = generated["samples"][last]["hidden"]
             image_path = ""
             attacked_path = ""
-            if args.save_images or args.attack_kind == "resize":
+            if args.save_images or args.attack_kind in {"resize", "storage"}:
                 stage = "save_reload_image"
                 image_path = str(image_dir / f"{sample_index:06d}.png")
                 stego.save_sample(hidden, image_path, dtype=sample_dtype)
@@ -216,6 +217,11 @@ def main() -> None:
                     stage = "resize_attack"
                     attacked_path = str(image_dir / f"{sample_index:06d}_resize_{args.resize_factor:g}.png")
                     resize_roundtrip_file(Path(image_path), Path(attacked_path), args.resize_factor)
+                    load_path = attacked_path
+                elif args.attack_kind == "storage":
+                    stage = "storage_attack"
+                    attacked_path = str(image_dir / f"{sample_index:06d}_storage.png")
+                    shutil.copy2(image_path, attacked_path)
                     load_path = attacked_path
                 stage = "load_attacked_image"
                 hidden = stego.load_sample(load_path, dtype=sample_dtype)

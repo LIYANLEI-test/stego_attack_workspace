@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from io import BytesIO
 
 import numpy as np
 import torch
@@ -25,14 +26,33 @@ def resize_roundtrip_pil(image: Image.Image, factor: float) -> Image.Image:
     return attacked.resize((width, height), RESIZE_INTERPOLATION)
 
 
+def storage_roundtrip_pil(image: Image.Image) -> Image.Image:
+    """Save to PNG and reload in RGB image space."""
+    buffer = BytesIO()
+    image.convert("RGB").save(buffer, format="PNG")
+    buffer.seek(0)
+    return Image.open(buffer).convert("RGB")
+
+
 def resize_roundtrip_array_rgb(image: np.ndarray, factor: float) -> np.ndarray:
     attacked = resize_roundtrip_pil(Image.fromarray(image.astype(np.uint8), "RGB"), factor)
+    return np.asarray(attacked, dtype=np.uint8)
+
+
+def storage_roundtrip_array_rgb(image: np.ndarray) -> np.ndarray:
+    attacked = storage_roundtrip_pil(Image.fromarray(image.astype(np.uint8), "RGB"))
     return np.asarray(attacked, dtype=np.uint8)
 
 
 def resize_roundtrip_file(input_path: Path, output_path: Path, factor: float) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     attacked = resize_roundtrip_pil(Image.open(input_path), factor)
+    attacked.save(output_path)
+
+
+def storage_roundtrip_file(input_path: Path, output_path: Path) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    attacked = storage_roundtrip_pil(Image.open(input_path))
     attacked.save(output_path)
 
 
@@ -60,6 +80,13 @@ def resize_roundtrip_tensor_minus1_1(tensor_bchw: torch.Tensor, factor: float) -
     return pil_to_tensor_minus1_1(attacked, tensor_bchw.device, tensor_bchw.dtype)
 
 
+def storage_roundtrip_tensor_minus1_1(tensor_bchw: torch.Tensor) -> torch.Tensor:
+    if tensor_bchw.ndim != 4 or tensor_bchw.shape[0] != 1 or tensor_bchw.shape[1] != 3:
+        raise ValueError(f"expected tensor shape [1,3,H,W], got {tuple(tensor_bchw.shape)}")
+    attacked = storage_roundtrip_pil(tensor_minus1_1_to_pil(tensor_bchw[0]))
+    return pil_to_tensor_minus1_1(attacked, tensor_bchw.device, tensor_bchw.dtype)
+
+
 def tensor_0_1_to_pil(tensor_chw: torch.Tensor) -> Image.Image:
     array = (
         (tensor_chw.detach().float().cpu().clamp(0, 1) * 255.0)
@@ -80,4 +107,11 @@ def resize_roundtrip_tensor_0_1(tensor_bchw: torch.Tensor, factor: float) -> tor
     if tensor_bchw.ndim != 4 or tensor_bchw.shape[0] != 1 or tensor_bchw.shape[1] != 3:
         raise ValueError(f"expected tensor shape [1,3,H,W], got {tuple(tensor_bchw.shape)}")
     attacked = resize_roundtrip_pil(tensor_0_1_to_pil(tensor_bchw[0]), factor)
+    return pil_to_tensor_0_1(attacked, tensor_bchw.device, tensor_bchw.dtype)
+
+
+def storage_roundtrip_tensor_0_1(tensor_bchw: torch.Tensor) -> torch.Tensor:
+    if tensor_bchw.ndim != 4 or tensor_bchw.shape[0] != 1 or tensor_bchw.shape[1] != 3:
+        raise ValueError(f"expected tensor shape [1,3,H,W], got {tuple(tensor_bchw.shape)}")
+    attacked = storage_roundtrip_pil(tensor_0_1_to_pil(tensor_bchw[0]))
     return pil_to_tensor_0_1(attacked, tensor_bchw.device, tensor_bchw.dtype)

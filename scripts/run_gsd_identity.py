@@ -37,7 +37,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
-from attack_common import resize_roundtrip_tensor_0_1  # noqa: E402
+from attack_common import resize_roundtrip_tensor_0_1, storage_roundtrip_tensor_0_1  # noqa: E402
 
 
 DEFAULT_GSD_ROOT = WORKSPACE_ROOT / "references" / "GSD"
@@ -61,7 +61,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--save-images", action="store_true")
     parser.add_argument("--skip-image", action="store_true", help="Only test official DCT mapping/extraction.")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
@@ -233,6 +233,10 @@ def main() -> None:
                         x0_for_recovery = resize_roundtrip_tensor_0_1(x0, args.resize_factor)
                         if args.save_images:
                             tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_resize_{args.resize_factor:g}.png")
+                    elif args.attack_kind == "storage":
+                        x0_for_recovery = storage_roundtrip_tensor_0_1(x0)
+                        if args.save_images:
+                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_storage.png")
                     else:
                         x0_for_recovery = x0
                     x_steg = torch.round(x0_for_recovery * 255).clamp(0, 255)

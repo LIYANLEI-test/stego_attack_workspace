@@ -34,7 +34,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
-from attack_common import resize_roundtrip_array_rgb  # noqa: E402
+from attack_common import resize_roundtrip_array_rgb, storage_roundtrip_array_rgb  # noqa: E402
 
 
 DEFAULT_CROSS_REF = WORKSPACE_ROOT / "references" / "CRoSS"
@@ -51,7 +51,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--private-key", default="Effiel tower")
     parser.add_argument("--public-key", default="a tree")
     parser.add_argument("--num-steps", type=int, default=50)
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--hf-cache-dir", default=str(DEFAULT_HF_HOME))
     parser.add_argument("--hf-endpoint", default="https://hf-mirror.com")
@@ -93,6 +93,10 @@ def run_cross(cross_demo, ode, args: argparse.Namespace, secret_path: Path, samp
     if args.attack_kind == "resize":
         image_for_reveal = resize_roundtrip_array_rgb(np.asarray(image_hide, dtype=np.uint8), args.resize_factor)
         attacked_path = str(sample_dir / f"hide_resize_{args.resize_factor:g}.png")
+        cv2.imwrite(attacked_path, cv2.cvtColor(image_for_reveal, cv2.COLOR_RGB2BGR))
+    elif args.attack_kind == "storage":
+        image_for_reveal = storage_roundtrip_array_rgb(np.asarray(image_hide, dtype=np.uint8))
+        attacked_path = str(sample_dir / "hide_storage.png")
         cv2.imwrite(attacked_path, cv2.cvtColor(image_for_reveal, cv2.COLOR_RGB2BGR))
 
     image_hide_latent_reveal = ode.image2latent(image_for_reveal)

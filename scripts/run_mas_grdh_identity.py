@@ -38,7 +38,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
-from attack_common import resize_roundtrip_tensor_minus1_1  # noqa: E402
+from attack_common import resize_roundtrip_tensor_minus1_1, storage_roundtrip_tensor_minus1_1  # noqa: E402
 
 
 DEFAULT_MAS_ROOT = WORKSPACE_ROOT / "references" / "mas_GRDH"
@@ -67,7 +67,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bit-num", type=int, default=1)
     parser.add_argument("--attack-layer", default="identity")
     parser.add_argument("--attack-factor", type=float, default=0.0)
-    parser.add_argument("--attack-kind", default="native", choices=["native", "identity", "resize"])
+    parser.add_argument("--attack-kind", default="native", choices=["native", "identity", "resize", "storage"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--precision", default="autocast", choices=["full", "autocast"])
     parser.add_argument("--gpu", default="cuda:0")
@@ -274,6 +274,8 @@ def main() -> None:
                         stage = "attack_layer"
                         if args.attack_kind == "resize":
                             x0_samples = resize_roundtrip_tensor_minus1_1(x0_samples, args.resize_factor).to(device)
+                        elif args.attack_kind == "storage":
+                            x0_samples = storage_roundtrip_tensor_minus1_1(x0_samples).to(device)
                         elif args.attack_kind == "identity":
                             pass
                         else:
