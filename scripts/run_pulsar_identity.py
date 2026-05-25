@@ -29,7 +29,7 @@ from pulsar_native_utils import (  # noqa: E402
     ensure_hf_cache,
     load_official_pulsar,
 )
-from attack_common import resize_roundtrip_file  # noqa: E402
+from attack_common import attack_roundtrip_file, attack_suffix  # noqa: E402
 
 
 PROTOCOL_SEED = "stego-attack-native-identity-v1-20260522"
@@ -57,8 +57,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hf-endpoint", default=DEFAULT_HF_ENDPOINT)
     parser.add_argument("--sage-bin", default="/data2/liyanlei/envs/stego_attack/bin/sage")
     parser.add_argument("--save-images", action="store_true")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
+    parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--sample-dtype", default="uint16", choices=["uint8", "uint16"])
     parser.add_argument("--force", action="store_true")
     parser.add_argument(
@@ -213,15 +214,22 @@ def main() -> None:
                 image_path = str(image_dir / f"{sample_index:06d}.png")
                 stego.save_sample(hidden, image_path, dtype=sample_dtype)
                 load_path = image_path
-                if args.attack_kind == "resize":
-                    stage = "resize_attack"
-                    attacked_path = str(image_dir / f"{sample_index:06d}_resize_{args.resize_factor:g}.png")
-                    resize_roundtrip_file(Path(image_path), Path(attacked_path), args.resize_factor)
-                    load_path = attacked_path
-                elif args.attack_kind == "storage":
+                if args.attack_kind == "storage":
                     stage = "storage_attack"
                     attacked_path = str(image_dir / f"{sample_index:06d}_storage.png")
                     shutil.copy2(image_path, attacked_path)
+                    load_path = attacked_path
+                elif args.attack_kind != "identity":
+                    stage = f"{args.attack_kind}_attack"
+                    suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
+                    attacked_path = str(image_dir / f"{sample_index:06d}_{suffix}.png")
+                    attack_roundtrip_file(
+                        Path(image_path),
+                        Path(attacked_path),
+                        args.attack_kind,
+                        resize_factor=args.resize_factor,
+                        attack_factor=args.attack_factor,
+                    )
                     load_path = attacked_path
                 stage = "load_attacked_image"
                 hidden = stego.load_sample(load_path, dtype=sample_dtype)
@@ -247,6 +255,7 @@ def main() -> None:
                 "exact_match": recovered == message,
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
                 "sample_dtype": args.sample_dtype,
                 "image_path": image_path,
                 "attacked_path": attacked_path,
@@ -271,6 +280,7 @@ def main() -> None:
                 "payload_sha256": hashlib.sha256(message).hexdigest() if message else "",
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
                 "sample_dtype": args.sample_dtype,
                 "stage": stage,
                 "error_type": type(exc).__name__,
@@ -298,6 +308,7 @@ def main() -> None:
         "hist_bins": args.hist_bins,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None,
         "sample_dtype": args.sample_dtype,
         "message_rule": "SHAKE256(protocol_seed | pulsar | sample_index | capacity_bytes)",
         "results_csv": str(csv_path),

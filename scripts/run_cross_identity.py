@@ -34,7 +34,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
-from attack_common import resize_roundtrip_array_rgb, storage_roundtrip_array_rgb  # noqa: E402
+from attack_common import attack_roundtrip_array_rgb, attack_suffix  # noqa: E402
 
 
 DEFAULT_CROSS_REF = WORKSPACE_ROOT / "references" / "CRoSS"
@@ -51,8 +51,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--private-key", default="Effiel tower")
     parser.add_argument("--public-key", default="a tree")
     parser.add_argument("--num-steps", type=int, default=50)
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
+    parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--hf-cache-dir", default=str(DEFAULT_HF_HOME))
     parser.add_argument("--hf-endpoint", default="https://hf-mirror.com")
     parser.add_argument("--force", action="store_true")
@@ -90,13 +91,14 @@ def run_cross(cross_demo, ode, args: argparse.Namespace, secret_path: Path, samp
 
     attacked_path = ""
     image_for_reveal = image_hide
-    if args.attack_kind == "resize":
-        image_for_reveal = resize_roundtrip_array_rgb(np.asarray(image_hide, dtype=np.uint8), args.resize_factor)
-        attacked_path = str(sample_dir / f"hide_resize_{args.resize_factor:g}.png")
-        cv2.imwrite(attacked_path, cv2.cvtColor(image_for_reveal, cv2.COLOR_RGB2BGR))
-    elif args.attack_kind == "storage":
-        image_for_reveal = storage_roundtrip_array_rgb(np.asarray(image_hide, dtype=np.uint8))
-        attacked_path = str(sample_dir / "hide_storage.png")
+    if args.attack_kind != "identity":
+        image_for_reveal = attack_roundtrip_array_rgb(
+            np.asarray(image_hide, dtype=np.uint8),
+            args.attack_kind,
+            resize_factor=args.resize_factor,
+            attack_factor=args.attack_factor,
+        )
+        attacked_path = str(sample_dir / f"hide_{attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)}.png")
         cv2.imwrite(attacked_path, cv2.cvtColor(image_for_reveal, cv2.COLOR_RGB2BGR))
 
     image_hide_latent_reveal = ode.image2latent(image_for_reveal)
@@ -161,6 +163,7 @@ def main() -> None:
                 "stego_path": str(stego_path),
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
                 "attacked_path": str(attacked_path) if attacked_path else "",
                 "attack_mse": attack_metrics.get("mse", ""),
                 "attack_psnr": attack_metrics.get("psnr", ""),
@@ -214,6 +217,7 @@ def main() -> None:
         "num_steps": args.num_steps,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None,
         "results_csv": str(csv_path),
         "failures_csv": str(failures_path),
         "created_at_utc": utc_now(),

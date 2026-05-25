@@ -6,6 +6,7 @@ from __future__ import annotations
 from pathlib import Path
 from io import BytesIO
 
+import cv2
 import numpy as np
 import torch
 from PIL import Image
@@ -34,6 +35,80 @@ def storage_roundtrip_pil(image: Image.Image) -> Image.Image:
     return Image.open(buffer).convert("RGB")
 
 
+def jpeg_roundtrip_pil(image: Image.Image, quality: float) -> Image.Image:
+    """Apply a JPEG compression round trip and return RGB pixels."""
+    quality_int = int(round(quality))
+    if quality_int < 1 or quality_int > 100:
+        raise ValueError(f"jpeg quality must be in [1,100], got {quality}")
+    buffer = BytesIO()
+    image.convert("RGB").save(buffer, format="JPEG", quality=quality_int)
+    buffer.seek(0)
+    return Image.open(buffer).convert("RGB")
+
+
+def median_blur_pil(image: Image.Image, kernel_size: float) -> Image.Image:
+    kernel = _odd_kernel("median blur kernel", kernel_size)
+    array = np.asarray(image.convert("RGB"), dtype=np.uint8)
+    return Image.fromarray(cv2.medianBlur(array, kernel), "RGB")
+
+
+def gaussian_blur_pil(image: Image.Image, kernel_size: float) -> Image.Image:
+    kernel = _odd_kernel("gaussian blur kernel", kernel_size)
+    array = np.asarray(image.convert("RGB"), dtype=np.uint8)
+    return Image.fromarray(cv2.GaussianBlur(array, (kernel, kernel), 0), "RGB")
+
+
+def _odd_kernel(name: str, value: float) -> int:
+    kernel = int(round(value))
+    if kernel <= 0 or kernel % 2 == 0:
+        raise ValueError(f"{name} must be a positive odd integer, got {value}")
+    return kernel
+
+
+def attack_suffix(attack_kind: str, resize_factor: float = 1.0, attack_factor: float | None = None) -> str:
+    def fmt(value: float) -> str:
+        return f"{value:g}".replace(".", "_")
+
+    if attack_kind == "identity":
+        return "identity"
+    if attack_kind == "storage":
+        return "storage"
+    if attack_kind == "resize":
+        return f"resize_{fmt(resize_factor)}"
+    if attack_kind in {"jpeg", "mblur", "gblur"}:
+        if attack_factor is None:
+            raise ValueError(f"{attack_kind} requires attack_factor")
+        return f"{attack_kind}_{fmt(attack_factor)}"
+    raise ValueError(f"unsupported attack kind: {attack_kind}")
+
+
+def apply_attack_pil(
+    image: Image.Image,
+    attack_kind: str,
+    resize_factor: float = 1.0,
+    attack_factor: float | None = None,
+) -> Image.Image:
+    if attack_kind == "identity":
+        return image.convert("RGB")
+    if attack_kind == "resize":
+        return resize_roundtrip_pil(image, resize_factor)
+    if attack_kind == "storage":
+        return storage_roundtrip_pil(image)
+    if attack_kind == "jpeg":
+        if attack_factor is None:
+            raise ValueError("jpeg attack requires attack_factor")
+        return jpeg_roundtrip_pil(image, attack_factor)
+    if attack_kind == "mblur":
+        if attack_factor is None:
+            raise ValueError("mblur attack requires attack_factor")
+        return median_blur_pil(image, attack_factor)
+    if attack_kind == "gblur":
+        if attack_factor is None:
+            raise ValueError("gblur attack requires attack_factor")
+        return gaussian_blur_pil(image, attack_factor)
+    raise ValueError(f"unsupported attack kind: {attack_kind}")
+
+
 def resize_roundtrip_array_rgb(image: np.ndarray, factor: float) -> np.ndarray:
     attacked = resize_roundtrip_pil(Image.fromarray(image.astype(np.uint8), "RGB"), factor)
     return np.asarray(attacked, dtype=np.uint8)
@@ -41,6 +116,21 @@ def resize_roundtrip_array_rgb(image: np.ndarray, factor: float) -> np.ndarray:
 
 def storage_roundtrip_array_rgb(image: np.ndarray) -> np.ndarray:
     attacked = storage_roundtrip_pil(Image.fromarray(image.astype(np.uint8), "RGB"))
+    return np.asarray(attacked, dtype=np.uint8)
+
+
+def attack_roundtrip_array_rgb(
+    image: np.ndarray,
+    attack_kind: str,
+    resize_factor: float = 1.0,
+    attack_factor: float | None = None,
+) -> np.ndarray:
+    attacked = apply_attack_pil(
+        Image.fromarray(image.astype(np.uint8), "RGB"),
+        attack_kind,
+        resize_factor=resize_factor,
+        attack_factor=attack_factor,
+    )
     return np.asarray(attacked, dtype=np.uint8)
 
 
@@ -53,6 +143,23 @@ def resize_roundtrip_file(input_path: Path, output_path: Path, factor: float) ->
 def storage_roundtrip_file(input_path: Path, output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     attacked = storage_roundtrip_pil(Image.open(input_path))
+    attacked.save(output_path)
+
+
+def attack_roundtrip_file(
+    input_path: Path,
+    output_path: Path,
+    attack_kind: str,
+    resize_factor: float = 1.0,
+    attack_factor: float | None = None,
+) -> None:
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    attacked = apply_attack_pil(
+        Image.open(input_path),
+        attack_kind,
+        resize_factor=resize_factor,
+        attack_factor=attack_factor,
+    )
     attacked.save(output_path)
 
 
@@ -87,6 +194,23 @@ def storage_roundtrip_tensor_minus1_1(tensor_bchw: torch.Tensor) -> torch.Tensor
     return pil_to_tensor_minus1_1(attacked, tensor_bchw.device, tensor_bchw.dtype)
 
 
+def attack_roundtrip_tensor_minus1_1(
+    tensor_bchw: torch.Tensor,
+    attack_kind: str,
+    resize_factor: float = 1.0,
+    attack_factor: float | None = None,
+) -> torch.Tensor:
+    if tensor_bchw.ndim != 4 or tensor_bchw.shape[0] != 1 or tensor_bchw.shape[1] != 3:
+        raise ValueError(f"expected tensor shape [1,3,H,W], got {tuple(tensor_bchw.shape)}")
+    attacked = apply_attack_pil(
+        tensor_minus1_1_to_pil(tensor_bchw[0]),
+        attack_kind,
+        resize_factor=resize_factor,
+        attack_factor=attack_factor,
+    )
+    return pil_to_tensor_minus1_1(attacked, tensor_bchw.device, tensor_bchw.dtype)
+
+
 def tensor_0_1_to_pil(tensor_chw: torch.Tensor) -> Image.Image:
     array = (
         (tensor_chw.detach().float().cpu().clamp(0, 1) * 255.0)
@@ -114,4 +238,21 @@ def storage_roundtrip_tensor_0_1(tensor_bchw: torch.Tensor) -> torch.Tensor:
     if tensor_bchw.ndim != 4 or tensor_bchw.shape[0] != 1 or tensor_bchw.shape[1] != 3:
         raise ValueError(f"expected tensor shape [1,3,H,W], got {tuple(tensor_bchw.shape)}")
     attacked = storage_roundtrip_pil(tensor_0_1_to_pil(tensor_bchw[0]))
+    return pil_to_tensor_0_1(attacked, tensor_bchw.device, tensor_bchw.dtype)
+
+
+def attack_roundtrip_tensor_0_1(
+    tensor_bchw: torch.Tensor,
+    attack_kind: str,
+    resize_factor: float = 1.0,
+    attack_factor: float | None = None,
+) -> torch.Tensor:
+    if tensor_bchw.ndim != 4 or tensor_bchw.shape[0] != 1 or tensor_bchw.shape[1] != 3:
+        raise ValueError(f"expected tensor shape [1,3,H,W], got {tuple(tensor_bchw.shape)}")
+    attacked = apply_attack_pil(
+        tensor_0_1_to_pil(tensor_bchw[0]),
+        attack_kind,
+        resize_factor=resize_factor,
+        attack_factor=attack_factor,
+    )
     return pil_to_tensor_0_1(attacked, tensor_bchw.device, tensor_bchw.dtype)

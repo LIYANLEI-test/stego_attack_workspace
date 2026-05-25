@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-05-26 - Ran unified storage attack pilot across non-RGS runnable identity baselines and documented results.
+Last activity: 2026-05-26 - Started continuous non-RGS attack sweep queue after resize/storage pilots.
 
 Progress: [=---------] 5%
 
@@ -89,6 +89,19 @@ than generic 8-bit RGB PIL conversion.
 - RGS: skipped per user instruction because it is too slow for attack runs on the current machine.
 - Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
 
+### Active Continuous Attack Queue
+
+GSD quick task: `.planning/quick/20260526-continuous-attack-sweeps/`
+
+Next queued non-RGS image-domain attacks:
+
+- JPEG quality 90, 70, 50.
+- Median blur kernel 3, 5, 7.
+- Gaussian blur kernel 3, 5, 7.
+
+Methods in queue: CRoSS, MAS/GRDH, GSD CIFAR10, Pulsar, and MDDM 128-byte
+pilot. Each queue item starts at 10 samples and uses idle GPUs as available.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -116,5 +129,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-26 CST
-Stopped at: Unified storage attack pilot complete for non-RGS runnable reveal paths; next action is decide whether to scale samples or add the next non-RGS attack.
+Stopped at: Continuous non-RGS attack sweep queue started; resize/storage complete, JPEG/blur sweeps next.
 Resume file: None

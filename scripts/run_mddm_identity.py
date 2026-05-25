@@ -22,7 +22,7 @@ if str(MDDM_REF) not in sys.path:
 if str(WORKSPACE_ROOT / "scripts") not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT / "scripts"))
 
-from attack_common import resize_roundtrip_pil, storage_roundtrip_pil  # noqa: E402
+from attack_common import apply_attack_pil, attack_suffix  # noqa: E402
 
 
 DEFAULT_PROTOCOL_DIR = Path("/data2/liyanlei/stego_attack_data/protocols/native_identity_v1_20260522")
@@ -47,8 +47,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-id", default="runwayml/stable-diffusion-v1-5")
     parser.add_argument("--hf-cache-dir", default="/data2/liyanlei/huggingface")
     parser.add_argument("--hf-endpoint", default="https://hf-mirror.com")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
+    parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
 
@@ -180,19 +181,18 @@ def main() -> None:
             record = json.loads(record_path.read_text(encoding="utf-8"))
             image_override = None
             attacked_path = ""
-            if args.attack_kind == "resize":
-                stage = "resize_attack"
+            if args.attack_kind != "identity":
+                stage = f"{args.attack_kind}_attack"
                 from PIL import Image
 
-                image_override = resize_roundtrip_pil(Image.open(record["image_path"]), args.resize_factor)
-                attacked_path = str(image_dir / f"{generated['image_id']}_resize_{args.resize_factor:g}.png")
-                image_override.save(attacked_path)
-            elif args.attack_kind == "storage":
-                stage = "storage_attack"
-                from PIL import Image
-
-                image_override = storage_roundtrip_pil(Image.open(record["image_path"]))
-                attacked_path = str(image_dir / f"{generated['image_id']}_storage.png")
+                image_override = apply_attack_pil(
+                    Image.open(record["image_path"]),
+                    args.attack_kind,
+                    resize_factor=args.resize_factor,
+                    attack_factor=args.attack_factor,
+                )
+                suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
+                attacked_path = str(image_dir / f"{generated['image_id']}_{suffix}.png")
                 image_override.save(attacked_path)
             stage = "decode"
             decoded = service.decode(record, image_override=image_override)
@@ -214,6 +214,7 @@ def main() -> None:
                 "exact_match": metrics["exact_match"],
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
                 "image_path": record["image_path"],
                 "attacked_path": attacked_path,
                 "record_path": str(record_path),
@@ -252,6 +253,7 @@ def main() -> None:
         "payload_bytes_override": args.payload_bytes,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None,
         "model_id": args.model_id,
         "payload_file": str(protocol_dir / "mddm_messages_500.jsonl"),
         "prompt_file": str(protocol_dir / "prompts_500.txt"),

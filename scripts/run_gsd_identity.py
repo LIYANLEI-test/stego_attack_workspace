@@ -37,7 +37,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
-from attack_common import resize_roundtrip_tensor_0_1, storage_roundtrip_tensor_0_1  # noqa: E402
+from attack_common import attack_roundtrip_tensor_0_1, attack_suffix  # noqa: E402
 
 
 DEFAULT_GSD_ROOT = WORKSPACE_ROOT / "references" / "GSD"
@@ -61,8 +61,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--save-images", action="store_true")
     parser.add_argument("--skip-image", action="store_true", help="Only test official DCT mapping/extraction.")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
+    parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
 
@@ -229,14 +230,16 @@ def main() -> None:
                     if args.save_images:
                         image_path = str(image_dir / f"stego_{sample_index:06d}.png")
                         tvu.save_image(x0[0], image_path)
-                    if args.attack_kind == "resize":
-                        x0_for_recovery = resize_roundtrip_tensor_0_1(x0, args.resize_factor)
+                    if args.attack_kind != "identity":
+                        x0_for_recovery = attack_roundtrip_tensor_0_1(
+                            x0,
+                            args.attack_kind,
+                            resize_factor=args.resize_factor,
+                            attack_factor=args.attack_factor,
+                        )
                         if args.save_images:
-                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_resize_{args.resize_factor:g}.png")
-                    elif args.attack_kind == "storage":
-                        x0_for_recovery = storage_roundtrip_tensor_0_1(x0)
-                        if args.save_images:
-                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_storage.png")
+                            suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
+                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_{suffix}.png")
                     else:
                         x0_for_recovery = x0
                     x_steg = torch.round(x0_for_recovery * 255).clamp(0, 255)
@@ -264,6 +267,7 @@ def main() -> None:
                 "use_ownmodel": args.use_ownmodel,
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
                 "payload_bits": len(payload_bits),
                 "payload_sha256": bits_sha256(payload_bits),
                 "clean_bit_errors": clean["bit_errors"],
@@ -320,6 +324,7 @@ def main() -> None:
         "use_ownmodel": args.use_ownmodel,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None,
         "skip_image": args.skip_image,
         "results_csv": str(csv_path),
         "failures_csv": str(failures_path),

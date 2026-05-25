@@ -38,7 +38,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
-from attack_common import resize_roundtrip_tensor_minus1_1, storage_roundtrip_tensor_minus1_1  # noqa: E402
+from attack_common import attack_roundtrip_tensor_minus1_1  # noqa: E402
 
 
 DEFAULT_MAS_ROOT = WORKSPACE_ROOT / "references" / "mas_GRDH"
@@ -67,7 +67,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bit-num", type=int, default=1)
     parser.add_argument("--attack-layer", default="identity")
     parser.add_argument("--attack-factor", type=float, default=0.0)
-    parser.add_argument("--attack-kind", default="native", choices=["native", "identity", "resize", "storage"])
+    parser.add_argument("--attack-kind", default="native", choices=["native", "identity", "resize", "storage", "jpeg", "mblur", "gblur"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--precision", default="autocast", choices=["full", "autocast"])
     parser.add_argument("--gpu", default="cuda:0")
@@ -272,12 +272,16 @@ def main() -> None:
                             save_tensor_image(model, x0_samples, Path(image_path))
 
                         stage = "attack_layer"
-                        if args.attack_kind == "resize":
-                            x0_samples = resize_roundtrip_tensor_minus1_1(x0_samples, args.resize_factor).to(device)
-                        elif args.attack_kind == "storage":
-                            x0_samples = storage_roundtrip_tensor_minus1_1(x0_samples).to(device)
-                        elif args.attack_kind == "identity":
+                        if args.attack_kind == "identity":
                             pass
+                        elif args.attack_kind in {"resize", "storage", "jpeg", "mblur", "gblur"}:
+                            factor = args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None
+                            x0_samples = attack_roundtrip_tensor_minus1_1(
+                                x0_samples,
+                                args.attack_kind,
+                                resize_factor=args.resize_factor,
+                                attack_factor=factor,
+                            ).to(device)
                         else:
                             tmp_name = str(out / "tmp" / f"{sample_index:06d}_{args.attack_layer}")
                             Path(tmp_name).parent.mkdir(parents=True, exist_ok=True)
@@ -330,9 +334,9 @@ def main() -> None:
                 "dpm_inv_steps": opt.dpm_inv_steps,
                 "scale": args.scale,
                 "attack_layer": args.attack_layer,
-                "attack_factor": args.attack_factor,
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
                 "bit_num": bits,
                 "payload_bits": len(payload_bits),
                 "payload_sha256": bits_sha256(payload_bits),
@@ -389,9 +393,9 @@ def main() -> None:
         "dpm_inv_steps": args.dpm_inv_steps or args.dpm_steps,
         "scale": args.scale,
         "attack_layer": args.attack_layer,
-        "attack_factor": args.attack_factor,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None,
         "mapping_func": args.mapping_func,
         "bit_num": args.bit_num,
         "skip_image": args.skip_image,
