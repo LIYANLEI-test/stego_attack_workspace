@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-05-26 - Completed non-RGS JPEG, median blur, and Gaussian blur attack pilots.
+Last activity: 2026-05-26 - Started identity-scale non-RGS attack sweep queue after completing 10-sample pilots.
 
 Progress: [=---------] 5%
 
@@ -108,6 +108,26 @@ JPEG quality `90/70/50`, median blur kernel `3/5/7`, and Gaussian blur kernel
 - RGS: skipped per user instruction because it is too slow for attack runs on the current machine.
 - Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
 
+### Active Identity-Scale Attack Queue
+
+GSD quick task: `.planning/quick/20260526-identity-scale-attack-sweeps/`
+
+Result root: `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`
+
+Queue protocol: same shared image-domain attack insertion as the 10-sample
+pilots, scaled to the current runnable identity/pilot counts per method:
+CRoSS 100, GSD CIFAR10 500, MAS/GRDH 500, Pulsar 500, and MDDM 128-byte pilot
+50. RGS remains excluded for speed. Diffusion-Stego remains excluded because it
+is projection-only in this workspace.
+
+Queued attack settings:
+
+- Resize factors `0.5`, `0.75`, `1.25`, and `1.5`.
+- Storage lossless PNG round trip.
+- JPEG quality `90`, `70`, and `50`.
+- Median blur kernel `3`, `5`, and `7`.
+- Gaussian blur kernel `3`, `5`, and `7`.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -125,7 +145,7 @@ None in `.planning/todos/pending/` yet.
 
 - `gsd-sdk` wrapper at `/home/liyanlei/bin/gsd-sdk` currently imports a missing `/tmp/get-shit-done-codex-install/sdk/dist/cli.js`; use manual `.planning/` updates or fallback tools until repaired.
 - RGS attack runs remain intentionally skipped for speed unless explicitly requested.
-- `gsd-sdk` is still broken, so this quick task was recorded manually in `.planning/quick/`.
+- `gsd-sdk` is still broken, so quick tasks are recorded manually in `.planning/quick/`.
 
 ## Deferred Items
 
@@ -136,5 +156,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-26 CST
-Stopped at: Resize, storage, JPEG, median blur, and Gaussian blur pilots complete for non-RGS runnable reveal paths; next action is decide whether to scale sample counts or add another attack family.
+Stopped at: Identity-scale non-RGS attack queue prepared; next action is run and monitor `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`.
 Resume file: None

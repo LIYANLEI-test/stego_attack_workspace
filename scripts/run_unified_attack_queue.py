@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run queued non-RGS unified attack pilots on available GPUs."""
+"""Run queued non-RGS unified image-domain attacks on available GPUs."""
 
 from __future__ import annotations
 
@@ -21,11 +21,20 @@ ENV_BIN = Path("/data2/liyanlei/envs/stego_attack/bin")
 HF_HOME = Path("/data2/liyanlei/huggingface")
 
 ATTACK_FACTORS = {
+    "resize": ["0.5", "0.75", "1.25", "1.5"],
+    "storage": [""],
     "jpeg": ["90", "70", "50"],
     "mblur": ["3", "5", "7"],
     "gblur": ["3", "5", "7"],
 }
 METHODS = ["cross", "gsd_cifar10", "mas_grdh", "pulsar", "mddm_128_pilot"]
+METHOD_COUNTS = {
+    "cross": 100,
+    "gsd_cifar10": 500,
+    "mas_grdh": 500,
+    "pulsar": 500,
+    "mddm_128_pilot": 50,
+}
 
 
 @dataclass(frozen=True)
@@ -41,6 +50,8 @@ class Job:
 
     @property
     def name(self) -> str:
+        if self.attack == "storage":
+            return f"{self.method}_{self.attack}_{self.count}"
         return f"{self.method}_{self.attack}_{self.safe_factor}_{self.count}"
 
 
@@ -49,11 +60,48 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--root", default=str(DEFAULT_ROOT))
     parser.add_argument("--gpus", default="0,2,3")
     parser.add_argument("--count", type=int, default=10)
+    parser.add_argument(
+        "--method-counts",
+        default="",
+        help=(
+            "Optional comma-separated overrides such as "
+            "cross=100,gsd_cifar10=500,mas_grdh=500,pulsar=500,mddm_128_pilot=50."
+        ),
+    )
+    parser.add_argument("--identity-scale", action="store_true", help="Use current non-RGS identity/pilot counts per method.")
     parser.add_argument("--attacks", default="jpeg,mblur,gblur")
     parser.add_argument("--methods", default=",".join(METHODS))
     parser.add_argument("--poll-seconds", type=float, default=10.0)
     parser.add_argument("--force", action="store_true", help="Delete prior runner CSVs via each runner's --force.")
     return parser.parse_args()
+
+
+def parse_method_counts(raw: str, fallback: int, identity_scale: bool) -> dict[str, int]:
+    counts = dict(METHOD_COUNTS) if identity_scale else {}
+    if raw.strip():
+        for item in raw.split(","):
+            if not item.strip():
+                continue
+            if "=" not in item:
+                raise ValueError(f"invalid method count item: {item!r}")
+            method, value = item.split("=", 1)
+            counts[method.strip()] = int(value.strip())
+    for method in METHODS:
+        counts.setdefault(method, fallback)
+    return counts
+
+
+def attack_args(job: Job) -> list[str]:
+    args = ["--attack-kind", job.attack]
+    if job.attack == "resize":
+        args.extend(["--resize-factor", job.factor])
+    elif job.attack in {"jpeg", "mblur", "gblur"}:
+        args.extend(["--attack-factor", job.factor])
+    return args
+
+
+def pulsar_sample_dtype(attack: str) -> str:
+    return "uint16" if attack in {"identity", "storage"} else "uint8"
 
 
 def result_total(out_dir: Path) -> int:
@@ -97,7 +145,6 @@ def base_env(gpu: str) -> dict[str, str]:
 
 
 def command_for(job: Job, out_dir: Path, force: bool) -> list[str]:
-    factor = str(job.factor)
     force_flag = ["--force"] if force else []
     if job.method == "cross":
         return [
@@ -107,10 +154,7 @@ def command_for(job: Job, out_dir: Path, force: bool) -> list[str]:
             str(job.count),
             "--num-steps",
             "50",
-            "--attack-kind",
-            job.attack,
-            "--attack-factor",
-            factor,
+            *attack_args(job),
             "--output-dir",
             str(out_dir),
             *force_flag,
@@ -123,10 +167,7 @@ def command_for(job: Job, out_dir: Path, force: bool) -> list[str]:
             str(job.count),
             "--timesteps",
             "1000",
-            "--attack-kind",
-            job.attack,
-            "--attack-factor",
-            factor,
+            *attack_args(job),
             "--device",
             "cuda",
             "--output-dir",
@@ -143,10 +184,7 @@ def command_for(job: Job, out_dir: Path, force: bool) -> list[str]:
             "20",
             "--scale",
             "5.0",
-            "--attack-kind",
-            job.attack,
-            "--attack-factor",
-            factor,
+            *attack_args(job),
             "--gpu",
             "cuda:0",
             "--output-dir",
@@ -165,12 +203,9 @@ def command_for(job: Job, out_dir: Path, force: bool) -> list[str]:
             "1",
             "--hist-bins",
             "100",
-            "--attack-kind",
-            job.attack,
-            "--attack-factor",
-            factor,
+            *attack_args(job),
             "--sample-dtype",
-            "uint8",
+            pulsar_sample_dtype(job.attack),
             "--output-dir",
             str(out_dir),
             *force_flag,
@@ -187,10 +222,7 @@ def command_for(job: Job, out_dir: Path, force: bool) -> list[str]:
             "1.0",
             "--payload-bytes",
             "128",
-            "--attack-kind",
-            job.attack,
-            "--attack-factor",
-            factor,
+            *attack_args(job),
             "--output-dir",
             str(out_dir),
             *force_flag,
@@ -198,14 +230,16 @@ def command_for(job: Job, out_dir: Path, force: bool) -> list[str]:
     raise ValueError(f"unsupported method: {job.method}")
 
 
-def make_jobs(attacks: list[str], methods: list[str], count: int) -> list[Job]:
+def make_jobs(attacks: list[str], methods: list[str], method_counts: dict[str, int]) -> list[Job]:
     jobs: list[Job] = []
     for attack in attacks:
         if attack not in ATTACK_FACTORS:
             raise ValueError(f"unsupported attack: {attack}")
         for factor in ATTACK_FACTORS[attack]:
             for method in methods:
-                jobs.append(Job(method=method, attack=attack, factor=factor, count=count))
+                if method not in METHODS:
+                    raise ValueError(f"unsupported method: {method}")
+                jobs.append(Job(method=method, attack=attack, factor=factor, count=method_counts[method]))
     return jobs
 
 
@@ -218,8 +252,10 @@ def main() -> int:
     gpus = [gpu.strip() for gpu in args.gpus.split(",") if gpu.strip()]
     attacks = [attack.strip() for attack in args.attacks.split(",") if attack.strip()]
     methods = [method.strip() for method in args.methods.split(",") if method.strip()]
-    pending = make_jobs(attacks, methods, args.count)
+    method_counts = parse_method_counts(args.method_counts, args.count, args.identity_scale)
+    pending = make_jobs(attacks, methods, method_counts)
     print(f"[queue] root={root}")
+    print("[queue] counts=" + ",".join(f"{method}={method_counts[method]}" for method in methods), flush=True)
     print(f"[queue] pending={len(pending)} gpus={','.join(gpus)}", flush=True)
 
     active: dict[str, tuple[Job, subprocess.Popen[bytes], object]] = {}
@@ -233,7 +269,7 @@ def main() -> int:
             while pending:
                 candidate = pending.pop(0)
                 candidate_out = root / candidate.name
-                if not args.force and result_total(candidate_out) >= args.count:
+                if not args.force and result_total(candidate_out) >= candidate.count:
                     continue
                 if try_lock(candidate_out):
                     job = candidate
