@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-05-26 - Started identity-scale non-RGS attack sweep queue after completing 10-sample pilots.
+Last activity: 2026-05-26 - Launched identity-scale non-RGS attack sweep queue on GPUs 0-3.
 
 Progress: [=---------] 5%
 
@@ -114,6 +114,10 @@ GSD quick task: `.planning/quick/20260526-identity-scale-attack-sweeps/`
 
 Result root: `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`
 
+Queue process: PID `8858`, launched 2026-05-26 05:33 CST with GPUs `0,1,2,3`.
+Driver log:
+`/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526/logs/queue_driver.log`
+
 Queue protocol: same shared image-domain attack insertion as the 10-sample
 pilots, scaled to the current runnable identity/pilot counts per method:
 CRoSS 100, GSD CIFAR10 500, MAS/GRDH 500, Pulsar 500, and MDDM 128-byte pilot
@@ -156,5 +160,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-26 CST
-Stopped at: Identity-scale non-RGS attack queue prepared; next action is run and monitor `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`.
+Stopped at: Identity-scale non-RGS attack queue running under PID 8858; next action is monitor `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`.
 Resume file: None

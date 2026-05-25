@@ -60,6 +60,15 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
   --poll-seconds 10
 ```
 
+Launched queue:
+
+```text
+started: 2026-05-26 05:33 CST
+pid: 8858
+driver log: /data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526/logs/queue_driver.log
+initial jobs: cross_resize_0_5_100, gsd_cifar10_resize_0_5_500, mas_grdh_resize_0_5_500, pulsar_resize_0_5_500
+```
+
 ## Verification
 
 - `scripts/run_unified_attack_queue.py` compiles.
