@@ -90,6 +90,20 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
 Use `--include-lpips` only when a full LPIPS recomputation is needed. It is
 slower because it reloads saved images.
 
+Identity-vs-attacked delta table:
+
+```sh
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  /data2/liyanlei/envs/stego_attack/bin/python \
+  scripts/summarize_attack_deltas.py \
+  --attack-root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527 \
+  --output /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_deltas.csv
+```
+
+The delta table computes paired overlap between identity and attacked sample
+indices. This should be the preferred table for claims about degradation
+relative to each method's no-attack baseline.
+
 ## Reporting Rules
 
 Main table columns:
@@ -103,6 +117,16 @@ Main table columns:
 | Recovery metric | bit accuracy or recovered-secret PSNR |
 | 95% CI | normal-approximation CI over samples |
 | Failures | native reveal/recovery failures after attack |
+
+Delta table columns:
+
+| Column | Meaning |
+|--------|---------|
+| identity_overlap_mean | no-attack baseline metric over the same sample IDs |
+| attack_overlap_mean | attacked metric over the same sample IDs |
+| delta_mean | identity minus attacked metric |
+| delta_ci95 | normal-approximation 95% CI for per-sample deltas |
+| relative_drop | `delta_mean / identity_overlap_mean` |
 
 For bit payload methods:
 

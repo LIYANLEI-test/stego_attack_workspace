@@ -334,6 +334,21 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
   --output /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_summary.csv
 ```
 
+Delta command:
+
+```sh
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  /data2/liyanlei/envs/stego_attack/bin/python scripts/summarize_attack_deltas.py \
+  --attack-root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527 \
+  --output /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_deltas.csv
+```
+
+Reporting scripts now provide:
+
+- target-aware selected attack summary with mean/std/95% CI columns;
+- paired identity-vs-attacked delta table over overlapping sample indices;
+- explicit completion/failure rates so partial live results are not mistaken for final formal tables.
+
 Paper framework decisions:
 
 - Main-table candidates: CRoSS, GSD CIFAR10, MAS/GRDH, Pulsar.

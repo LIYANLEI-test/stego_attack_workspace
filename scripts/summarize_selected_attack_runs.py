@@ -17,7 +17,7 @@ if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
 from identity_common import image_lpips, image_metrics  # noqa: E402
-from selected_attack_matrix import SELECTED_ATTACKS  # noqa: E402
+from selected_attack_matrix import SELECTED_ATTACKS, default_count_for  # noqa: E402
 
 
 DEFAULT_ROOT = Path("/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527")
@@ -30,8 +30,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--root", default=str(DEFAULT_ROOT))
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--output", default="")
+    parser.add_argument("--method-counts", default="", help="Comma-separated target overrides, e.g. cross=100,gsd_cifar10=500.")
     parser.add_argument("--include-lpips", action="store_true", help="Compute LPIPS from saved images when not already present.")
     return parser.parse_args()
+
+
+def parse_method_counts(raw: str) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    if not raw.strip():
+        return counts
+    for item in raw.split(","):
+        if not item.strip():
+            continue
+        if "=" not in item:
+            raise ValueError(f"invalid method-count item: {item!r}")
+        method, value = item.split("=", 1)
+        counts[method.strip()] = int(value.strip())
+    return counts
 
 
 def read_rows(path: Path) -> list[dict[str, str]]:
@@ -121,7 +136,7 @@ def recovery_values(method: str, rows: list[dict[str, str]], failures: list[dict
     return "metric", []
 
 
-def summarize_one(root: Path, spec, device: str, include_lpips: bool) -> dict[str, object]:
+def summarize_one(root: Path, spec, device: str, include_lpips: bool, target_count: int) -> dict[str, object]:
     matches = sorted(root.glob(f"{spec.method}_{spec.name_part}_*"))
     matches = [
         path
@@ -147,7 +162,11 @@ def summarize_one(root: Path, spec, device: str, include_lpips: bool) -> dict[st
         "rows": len(rows),
         "failures": len(failures),
         "total": total,
+        "target": target_count,
+        "complete": total >= target_count,
+        "failure_rate": (len(failures) / target_count) if target_count else "",
         "exact": exact,
+        "exact_rate": (exact / target_count) if target_count else "",
         "recovery_mean": mean(metric_values),
         "recovery_std": stdev(metric_values),
         "recovery_ci95": ci95(metric_values),
@@ -158,7 +177,6 @@ def summarize_one(root: Path, spec, device: str, include_lpips: bool) -> dict[st
         "quality_lpips_mean": mean(lpips_values),
         "runtime_s_mean": mean(values_from_rows(rows + failures, "runtime_s")),
         "output_dir": str(out_dir),
-        "complete": bool(total and matches),
         "note": spec.note,
     }
 
@@ -172,7 +190,17 @@ def fmt(value: object) -> object:
 def main() -> int:
     args = parse_args()
     root = Path(args.root).resolve()
-    summaries = [summarize_one(root, spec, args.device, args.include_lpips) for spec in SELECTED_ATTACKS]
+    target_overrides = parse_method_counts(args.method_counts)
+    summaries = [
+        summarize_one(
+            root,
+            spec,
+            args.device,
+            args.include_lpips,
+            target_overrides.get(spec.method, default_count_for(spec.method)),
+        )
+        for spec in SELECTED_ATTACKS
+    ]
     fields = [
         "method",
         "attack",
@@ -183,7 +211,11 @@ def main() -> int:
         "rows",
         "failures",
         "total",
+        "target",
+        "complete",
+        "failure_rate",
         "exact",
+        "exact_rate",
         "recovery_mean",
         "recovery_std",
         "recovery_ci95",
@@ -193,7 +225,6 @@ def main() -> int:
         "quality_ssim_mean",
         "quality_lpips_mean",
         "runtime_s_mean",
-        "complete",
         "output_dir",
         "note",
     ]
@@ -207,12 +238,16 @@ def main() -> int:
 
     print(f"root: {root}")
     print(f"summary_csv: {output}")
-    print(f"{'method':16s} {'attack':10s} {'factor':12s} {'done':>9s} {'metric':14s} {'mean':>10s} {'psnr':>10s}")
+    print(
+        f"{'method':16s} {'attack':10s} {'factor':12s} {'done':>9s} {'complete':>8s} "
+        f"{'metric':14s} {'mean':>10s} {'psnr':>10s}"
+    )
     for row in summaries:
-        done = f"{row['total']}"
+        done = f"{row['total']}/{row['target']}"
         print(
             f"{row['method']:16s} {row['attack']:10s} {row['factor']:12s} {done:>9s} "
-            f"{row['metric']:14s} {fmt(row['recovery_mean']):>10s} {fmt(row['quality_psnr_mean']):>10s}"
+            f"{str(row['complete']):>8s} {row['metric']:14s} "
+            f"{fmt(row['recovery_mean']):>10s} {fmt(row['quality_psnr_mean']):>10s}"
         )
     return 0
 
