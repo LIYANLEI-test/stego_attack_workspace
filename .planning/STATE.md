@@ -307,6 +307,16 @@ active first wave: cross_resize_1_5_100, cross_jpeg_50_100, cross_mblur_3_100, c
 live check: first CRoSS rows written; no failures observed yet
 ```
 
+Queue progress as of 2026-05-27 07:18 CST:
+
+```text
+cross_resize_1_5_100: 37/100 rows, 0 failures
+cross_jpeg_50_100: 46/100 rows, 0 failures
+cross_mblur_3_100: 46/100 rows, 0 failures
+cross_gblur_3_100: 46/100 rows, 0 failures
+driver pid 8246 still running
+```
+
 Formal queue size:
 
 - CRoSS: 5 selected attacks x 100 samples.
