@@ -55,6 +55,20 @@ def key(row: dict[str, str]) -> tuple[str, str, str]:
 
 def display_attack(row: dict[str, str]) -> str:
     label = row.get("label") or f"{row.get('attack', '')}_{row.get('factor', '')}"
+    attack = row.get("attack", "")
+    factor = row.get("factor", "")
+    if attack == "resize":
+        return f"resize {factor}x"
+    if attack == "jpeg":
+        return f"JPEG q={factor}"
+    if attack == "mblur":
+        return f"median blur k={factor}"
+    if attack == "gblur":
+        return f"Gaussian blur k={factor}"
+    if attack == "regen_vae":
+        return f"Regen-VAE q={factor}"
+    if attack == "unmarker":
+        return "UnMarker high-smoke-25"
     return label.replace("_", " ")
 
 
@@ -79,6 +93,12 @@ def merged_rows(summary_rows: list[dict[str, str]], delta_rows: list[dict[str, s
     return out
 
 
+def failure_display(row: dict[str, str]) -> str:
+    if row.get("total") in {"", "0", "0.0"}:
+        return ""
+    return pct(row.get("failure_rate"))
+
+
 def render_markdown(rows: list[dict[str, str]]) -> str:
     lines = [
         "# Selected Attack Paper Tables",
@@ -99,7 +119,7 @@ def render_markdown(rows: list[dict[str, str]]) -> str:
                 attacked=fmt(row.get("recovery_mean"), 4),
                 delta=fmt(row.get("delta_delta_mean"), 4),
                 psnr=fmt(row.get("quality_psnr_mean"), 2),
-                failure=pct(row.get("failure_rate")),
+                failure=failure_display(row),
             )
         )
     lines.extend(
@@ -143,7 +163,7 @@ def render_latex(rows: list[dict[str, str]]) -> str:
                 attacked=fmt(row.get("recovery_mean"), 4),
                 delta=fmt(row.get("delta_delta_mean"), 4),
                 psnr=fmt(row.get("quality_psnr_mean"), 2),
-                failure=latex_escape(pct(row.get("failure_rate"))),
+                failure=latex_escape(failure_display(row)),
             )
         )
     lines.extend(["\\bottomrule", "\\end{tabular}", ""])
