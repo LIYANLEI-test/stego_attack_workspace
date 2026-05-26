@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-05-26 - Launched identity-scale non-RGS attack sweep queue on GPUs 0-3.
+Last activity: 2026-05-26 - Resumed identity-scale non-RGS attack queue; resize factor 0.5 completed at formal scale.
 
 Progress: [=---------] 5%
 
@@ -132,6 +132,18 @@ Queued attack settings:
 - Median blur kernel `3`, `5`, and `7`.
 - Gaussian blur kernel `3`, `5`, and `7`.
 
+Latest checkpoint, 2026-05-26 10:43 CST:
+
+- `resize_0.5` completed for all queued non-RGS methods.
+  - CRoSS: 100/100 rows, 0 failures, mean recovery PSNR 19.996824 dB.
+  - GSD CIFAR10: 500/500 rows, 0 failures, mean bit accuracy 0.588711.
+  - MAS/GRDH: 500/500 rows, 0 failures, mean bit accuracy 0.896614.
+  - Pulsar: 500/500 total records, 7 zero-bit rows and 493 native reveal failures.
+  - MDDM 128-byte pilot: 50/50 rows, 0 failures, mean bit accuracy 0.981445.
+- `resize_0.75` is in progress: CRoSS and MDDM finished, GSD/MAS/Pulsar running.
+- `resize_1.25` has started with CRoSS.
+- No duplicate sample IDs have been detected by `scripts/summarize_unified_attack_runs.py`.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -160,5 +172,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-26 CST
-Stopped at: Identity-scale non-RGS attack queue running under PID 8858; next action is monitor `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`.
+Stopped at: Identity-scale non-RGS attack queue running under PID 8858; resize 0.5 is complete, resize 0.75 and 1.25 are in progress. Next action is monitor `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`.
 Resume file: None

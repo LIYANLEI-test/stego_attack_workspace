@@ -69,6 +69,15 @@ driver log: /data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale
 initial jobs: cross_resize_0_5_100, gsd_cifar10_resize_0_5_500, mas_grdh_resize_0_5_500, pulsar_resize_0_5_500
 ```
 
+Checkpoint:
+
+```text
+2026-05-26 10:43 CST:
+resize_0.5 completed for CRoSS, GSD CIFAR10, MAS/GRDH, Pulsar, and MDDM pilot.
+resize_0.75 is partially complete/in progress; resize_1.25 has started with CRoSS.
+No duplicate sample IDs detected by summarize_unified_attack_runs.py.
+```
+
 ## Verification
 
 - `scripts/run_unified_attack_queue.py` compiles.
