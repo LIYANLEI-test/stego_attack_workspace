@@ -104,6 +104,31 @@ The delta table computes paired overlap between identity and attacked sample
 indices. This should be the preferred table for claims about degradation
 relative to each method's no-attack baseline.
 
+Paper table rendering:
+
+```sh
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  /data2/liyanlei/envs/stego_attack/bin/python \
+  scripts/render_paper_tables.py \
+  --summary /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_summary.csv \
+  --deltas /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_deltas.csv \
+  --output-md /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables.md \
+  --output-tex /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables.tex
+```
+
+Experiment manifest:
+
+```sh
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  /data2/liyanlei/envs/stego_attack/bin/python \
+  scripts/capture_experiment_manifest.py \
+  --root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527
+```
+
+The manifest records the git commit, GPU inventory, quality budget, and script
+entry points for reproducibility. Keep it under `/data2`; do not commit the
+generated JSON, CSV, Markdown, or TeX result artifacts.
+
 ## Reporting Rules
 
 Main table columns:

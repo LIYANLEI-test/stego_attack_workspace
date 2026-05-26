@@ -348,6 +348,18 @@ Reporting scripts now provide:
 - target-aware selected attack summary with mean/std/95% CI columns;
 - paired identity-vs-attacked delta table over overlapping sample indices;
 - explicit completion/failure rates so partial live results are not mistaken for final formal tables.
+- Markdown/LaTeX paper-table rendering from summary and delta CSVs.
+- Experiment manifest capture for git head, GPU inventory, budget, and script entry points.
+
+Live generated reporting artifacts:
+
+```text
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_summary_live.csv
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_deltas_live.csv
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables_live.md
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables_live.tex
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/experiment_manifest_live.json
+```
 
 Paper framework decisions:
 
