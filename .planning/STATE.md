@@ -47,6 +47,7 @@ Recent decisions affecting current work:
 - Do not resume formal attack sweeps until the baseline set is re-evaluated and strengthened; the current matrix is useful as pilot/checkpoint data, not final comparative evidence.
 - Treat `andrekassis/ai-watermark`/UnMarker as an attack-method candidate only, not a hiding/steganography baseline.
 - Treat `XuandongZhao/WatermarkAttacker` Regen-VAE as a stronger adapted attack-method candidate, not a hiding/steganography baseline.
+- Treat `and-mill/semantic-forgery` as related semantic-watermark attack work, not a current hidden-payload destruction baseline.
 
 ### Current Identity Snapshot
 
@@ -210,6 +211,17 @@ Result root:
 - Result: 10/10 rows, 0 failures, mean bit accuracy 0.524089, BER 0.475911, mean stego-vs-attacked PSNR 25.176627 dB, mean runtime 33.58 s/sample.
 - Caveat: smoke-only adapted attack result; do not present as a full WatermarkAttacker paper reproduction.
 
+### Current Semantic Forgery Suitability Check
+
+GSD quick task: `.planning/quick/20260527-semantic-forgery-suitability/`
+
+Doc: `docs/semantic_forgery_suitability_20260527.md`
+
+- Decision: `and-mill/semantic-forgery` is not included in the current attack matrix.
+- Provenance: official public code for *Black-Box Forgery Attacks on Semantic Watermarks for Diffusion Models*, CVPR 2025 Oral.
+- Reason: the native attacks target Tree-Ring/Gaussian-Shading semantic watermarks and their verifiers. The scripts generate or reprompt semantic-watermarked diffusion images rather than applying a detector-independent, content-preserving transform to arbitrary stego artifacts before native reveal.
+- No 10-image smoke was run because it would measure a different task, not hidden-payload destruction under the current quality-budget protocol.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -220,6 +232,7 @@ Result root:
 | 2026-05-26 | Continuous JPEG/blur attack sweeps | Shared JPEG, median blur, and Gaussian blur ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; 45/45 method/factor directories completed with 10 records each |
 | 2026-05-26 | UnMarker attack candidate smoke | `andrekassis/ai-watermark` kept as adapted attack candidate, not hiding baseline; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.765430 |
 | 2026-05-26 | Strong attack baseline survey | WatermarkAttacker Regen-VAE selected and integrated as adapted attack candidate; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.524089 |
+| 2026-05-27 | Semantic Forgery suitability check | `and-mill/semantic-forgery` classified as related semantic-watermark attack work, not a current hidden-payload destruction baseline |
 
 ### Pending Todos
 
