@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-05-25)
 
 **Core value:** Produce reproducible, paper-aligned attack experiments that preserve native baseline semantics and honest provenance labels.
-**Current focus:** Phase 1 - Identity Baseline Finalization, with quality-budget attack parameter calibration now available for the runnable non-RGS methods.
+**Current focus:** Paper-grade selected-attack framework and formal quality-budget sweeps for runnable non-RGS methods.
 
 ## Current Position
 
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
-Status: Quality-budget attack calibration complete; formal-scale sweeps still pending baseline/sample-count decisions
-Last activity: 2026-05-27 - Selected 10-sample attack parameters under PSNR >= 30 dB and LPIPS <= 0.10.
+Status: Formal selected-attack framework ready; long queue may be launched/resumed under `/data2`
+Last activity: 2026-05-27 - Added paper framework, selected attack matrix, formal queue, and summary scripts.
 
 Progress: [=---------] 5%
 
@@ -268,6 +268,71 @@ Caveats:
 - MDDM remains `native_third_party`.
 - UnMarker is currently integrated only for GSD and is an adapted attack-method candidate.
 
+### Current Paper Framework And Formal Queue
+
+GSD quick task: `.planning/quick/20260527-paper-framework-and-selected-formal-queue/`
+
+Doc: `docs/paper_experiment_framework_20260527.md`
+
+Selected matrix source:
+
+```text
+scripts/selected_attack_matrix.py
+```
+
+Formal selected-attack queue:
+
+```text
+scripts/run_selected_attack_queue.py
+```
+
+Formal selected-attack summary:
+
+```text
+scripts/summarize_selected_attack_runs.py
+```
+
+Planned formal root:
+
+```text
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527
+```
+
+Formal queue size:
+
+- CRoSS: 5 selected attacks x 100 samples.
+- GSD CIFAR10: 4 selected attacks x 500 samples.
+- MAS/GRDH: 3 selected attacks x 500 samples.
+- MDDM 128-byte pilot: 1 selected attack x 50 samples.
+- Pulsar: 5 selected attacks x 500 samples.
+
+Launch command:
+
+```sh
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  HF_HOME=/data2/liyanlei/huggingface TORCH_HOME=/data2/liyanlei/torch \
+  /data2/liyanlei/envs/stego_attack/bin/python scripts/run_selected_attack_queue.py \
+  --root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527 \
+  --gpus 0,1,2,3
+```
+
+Summary command:
+
+```sh
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  /data2/liyanlei/envs/stego_attack/bin/python scripts/summarize_selected_attack_runs.py \
+  --root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527 \
+  --output /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_summary.csv
+```
+
+Paper framework decisions:
+
+- Main-table candidates: CRoSS, GSD CIFAR10, MAS/GRDH, Pulsar.
+- MDDM remains pilot/appendix unless official code is integrated.
+- RGS remains identity-only until runtime budget is explicitly accepted.
+- Diffusion-Stego remains projection-only and excluded from image-attack claims.
+- Regen-VAE and UnMarker are adapted attack baselines, not full paper reproductions.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -280,6 +345,7 @@ Caveats:
 | 2026-05-26 | Strong attack baseline survey | WatermarkAttacker Regen-VAE selected and integrated as adapted attack candidate; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.524089 |
 | 2026-05-27 | Semantic Forgery suitability check | `and-mill/semantic-forgery` classified as related semantic-watermark attack work, not a current hidden-payload destruction baseline |
 | 2026-05-27 | Quality-budget attack selection | Selected 10-sample fair-budget attack parameters under PSNR >= 30 dB and LPIPS <= 0.10 for CRoSS, GSD, MAS/GRDH, MDDM pilot, and Pulsar |
+| 2026-05-27 | Paper framework and selected formal queue | Added selected attack matrix, formal queue, summary script with CI columns, and paper claim-boundary documentation |
 
 ### Pending Todos
 
