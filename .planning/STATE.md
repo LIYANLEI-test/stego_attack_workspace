@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-05-25)
 
 **Core value:** Produce reproducible, paper-aligned attack experiments that preserve native baseline semantics and honest provenance labels.
-**Current focus:** Phase 1 - Identity Baseline Finalization
+**Current focus:** Phase 1 - Identity Baseline Finalization, with an immediate baseline re-scope gate before more formal attacks.
 
 ## Current Position
 
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
-Status: In progress
-Last activity: 2026-05-26 - Identity-scale resize factors 0.5 and 0.75 completed at formal scale.
+Status: Paused for baseline re-scope
+Last activity: 2026-05-26 - Identity-scale attack queue intentionally stopped after the user judged the current baseline set too small/weak.
 
 Progress: [=---------] 5%
 
@@ -44,6 +44,7 @@ Recent decisions affecting current work:
 - Keep MDDM labeled `native_third_party`; do not call it official.
 - Keep Diffusion-Stego labeled `nsdser_reference`; projection-only checks are not full image recovery.
 - Commit and push task updates to GitHub after meaningful state changes.
+- Do not resume formal attack sweeps until the baseline set is re-evaluated and strengthened; the current matrix is useful as pilot/checkpoint data, not final comparative evidence.
 
 ### Current Identity Snapshot
 
@@ -108,13 +109,15 @@ JPEG quality `90/70/50`, median blur kernel `3/5/7`, and Gaussian blur kernel
 - RGS: skipped per user instruction because it is too slow for attack runs on the current machine.
 - Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
 
-### Active Identity-Scale Attack Queue
+### Paused Identity-Scale Attack Queue
 
 GSD quick task: `.planning/quick/20260526-identity-scale-attack-sweeps/`
 
 Result root: `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`
 
-Queue process: PID `8858`, launched 2026-05-26 05:33 CST with GPUs `0,1,2,3`.
+Queue status: intentionally stopped on 2026-05-26 13:23 CST after the user said the baseline set is too small/weak.
+
+Original queue process: PID `8858`, launched 2026-05-26 05:33 CST with GPUs `0,1,2,3`.
 Driver log:
 `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526/logs/queue_driver.log`
 
@@ -132,7 +135,7 @@ Queued attack settings:
 - Median blur kernel `3`, `5`, and `7`.
 - Gaussian blur kernel `3`, `5`, and `7`.
 
-Latest checkpoint, 2026-05-26 13:02 CST:
+Stop checkpoint, 2026-05-26 13:23 CST:
 
 - `resize_0.5` completed for all queued non-RGS methods.
   - CRoSS: 100/100 rows, 0 failures, mean recovery PSNR 19.996824 dB.
@@ -146,8 +149,31 @@ Latest checkpoint, 2026-05-26 13:02 CST:
   - MAS/GRDH: 500/500 rows, 0 failures, mean bit accuracy 0.937157.
   - Pulsar: 500/500 total records, 7 zero-bit rows and 493 native reveal failures.
   - MDDM 128-byte pilot: 50/50 rows, 0 failures, mean bit accuracy 0.994941.
-- `resize_1.25` is in progress: CRoSS completed, GSD/MAS/Pulsar/MDDM running.
+- `resize_1.25` is partial because the queue was stopped intentionally.
+  - CRoSS: 100/100 rows, 0 failures, mean recovery PSNR 21.743084 dB.
+  - GSD CIFAR10: 181/500 rows, 0 failures, mean bit accuracy 0.763598.
+  - MAS/GRDH: 309/500 rows, 0 failures, mean bit accuracy 0.952522.
+  - Pulsar: 195/500 total records, 3 zero-bit rows and 192 native reveal failures.
+  - MDDM 128-byte pilot: 50/50 rows, 0 failures, mean bit accuracy 0.998320.
+- `resize_1.5` is partial because the queue was stopped intentionally.
+  - CRoSS: 11/100 rows, 0 failures, mean recovery PSNR 19.955780 dB.
+- Formal-scale storage, JPEG, median blur, and Gaussian blur queue items were not started before the pause.
 - No duplicate sample IDs have been detected by `scripts/summarize_unified_attack_runs.py`.
+- No matching attack queue or method runner processes remained after stopping; GPUs were idle or near-idle at the pause check.
+
+### Baseline Re-Scope Gate
+
+The user explicitly paused further attacks because the baseline set is currently
+too small/weak for a convincing comparison. Treat the completed pilots and the
+formal resize 0.5/0.75 results as checkpoint data only.
+
+Before restarting any formal attack queue:
+
+- Reassess which stronger official/public baselines should be added.
+- Decide whether to replace or supplement current `native_third_party` MDDM with an official implementation.
+- Decide whether Diffusion-Stego needs a full image-generation/reveal implementation or should stay excluded from image attacks.
+- Keep RGS skipped from attacks only if the user accepts the runtime tradeoff after the stronger baseline plan is clear.
+- Update `.planning/` and push the accepted baseline plan before running more long sweeps.
 
 ### Quick Tasks Completed
 
@@ -167,6 +193,7 @@ None in `.planning/todos/pending/` yet.
 - `gsd-sdk` wrapper at `/home/liyanlei/bin/gsd-sdk` currently imports a missing `/tmp/get-shit-done-codex-install/sdk/dist/cli.js`; use manual `.planning/` updates or fallback tools until repaired.
 - RGS attack runs remain intentionally skipped for speed unless explicitly requested.
 - `gsd-sdk` is still broken, so quick tasks are recorded manually in `.planning/quick/`.
+- Baseline adequacy is now a blocking methodological concern; do not resume queued attacks until the baseline set is re-scoped.
 
 ## Deferred Items
 
@@ -177,5 +204,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-26 CST
-Stopped at: Identity-scale non-RGS attack queue running under PID 8858; resize 0.5 and 0.75 are complete, resize 1.25 is in progress. Next action is monitor `/data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526`.
-Resume file: None
+Stopped at: Identity-scale non-RGS attack queue intentionally stopped. Resize 0.5 and 0.75 are complete; resize 1.25 and 1.5 are partial; formal storage/JPEG/blur scale did not start under this queue. Next action is baseline re-scope before any more attack execution.
+Resume file: `.planning/.continue-here.md`

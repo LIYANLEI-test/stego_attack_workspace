@@ -1,0 +1,77 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-05-26T13:23:18+08:00",
+  "phase": "1",
+  "phase_name": "Identity Baseline Finalization",
+  "phase_dir": null,
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": "resize_0.5",
+      "name": "Formal identity-scale resize factor 0.5 for current non-RGS methods",
+      "status": "done",
+      "commit": "d775231"
+    },
+    {
+      "id": "resize_0.75",
+      "name": "Formal identity-scale resize factor 0.75 for current non-RGS methods",
+      "status": "done",
+      "commit": "d775231"
+    },
+    {
+      "id": "pause_queue",
+      "name": "Stop active formal attack queue after baseline adequacy concern",
+      "status": "done",
+      "progress": "No matching queue or method runner processes remained at the pause check; GPUs were idle or near-idle."
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": "baseline_rescope",
+      "name": "Reassess and strengthen the baseline set before more formal attacks",
+      "status": "blocking"
+    },
+    {
+      "id": "attack_resume_decision",
+      "name": "Resume or redesign storage/JPEG/blur/resize formal sweeps only after the accepted baseline plan is committed",
+      "status": "not_started"
+    }
+  ],
+  "blockers": [
+    {
+      "description": "The user judged the current baseline set too small/weak for a convincing comparison.",
+      "type": "human_action",
+      "workaround": "Treat current attack outputs as checkpoint/pilot data and produce a stronger baseline plan before running more queues."
+    },
+    {
+      "description": "gsd-sdk wrapper is broken and imports a missing temporary install path.",
+      "type": "technical",
+      "workaround": "Maintain .planning files manually until the wrapper is repaired."
+    }
+  ],
+  "human_actions_pending": [
+    {
+      "action": "Approve the stronger baseline set and whether to include slower RGS attacks.",
+      "context": "Formal attack execution should not continue until the comparison set is considered strong enough.",
+      "blocking": true
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "Stop the identity-scale attack queue instead of continuing the weak baseline matrix.",
+      "rationale": "Continuing would spend GPU time scaling a comparison design the user no longer accepts.",
+      "phase": "1"
+    },
+    {
+      "decision": "Keep payload and recovery semantics method-native.",
+      "rationale": "Paper alignment is more important than forcing a synthetic common payload size.",
+      "phase": "1"
+    }
+  ],
+  "uncommitted_files": [],
+  "next_action": "Draft a stronger official/public baseline set and update .planning before restarting any formal attack queue.",
+  "context_notes": "The queue root is /data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526. Resize 0.5 and 0.75 completed at formal scale; resize 1.25 and 1.5 are partial because the queue was intentionally stopped."
+}
