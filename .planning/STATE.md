@@ -11,8 +11,8 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
-Status: Formal selected-attack framework ready; long queue may be launched/resumed under `/data2`
-Last activity: 2026-05-27 - Added paper framework, selected attack matrix, formal queue, and summary scripts.
+Status: Formal selected-attack queue running under `/data2`
+Last activity: 2026-05-27 06:18 CST - Launched selected quality-budget formal queue and verified first CRoSS rows are being written.
 
 Progress: [=---------] 5%
 
@@ -296,6 +296,15 @@ Planned formal root:
 
 ```text
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527
+```
+
+Queue status as of 2026-05-27 06:18 CST:
+
+```text
+driver pid: 8246
+driver log: /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_driver.log
+active first wave: cross_resize_1_5_100, cross_jpeg_50_100, cross_mblur_3_100, cross_gblur_3_100
+live check: first CRoSS rows written; no failures observed yet
 ```
 
 Formal queue size:

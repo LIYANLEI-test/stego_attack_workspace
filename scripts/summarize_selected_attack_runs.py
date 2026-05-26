@@ -123,7 +123,13 @@ def recovery_values(method: str, rows: list[dict[str, str]], failures: list[dict
 
 def summarize_one(root: Path, spec, device: str, include_lpips: bool) -> dict[str, object]:
     matches = sorted(root.glob(f"{spec.method}_{spec.name_part}_*"))
-    matches = [path for path in matches if path.is_dir() and not path.name.endswith(".running")]
+    matches = [
+        path
+        for path in matches
+        if path.is_dir()
+        and not path.name.endswith(".running")
+        and ((path / "identity_results.csv").exists() or (path / "identity_failures.csv").exists())
+    ]
     out_dir = matches[-1] if matches else root / f"{spec.method}_{spec.name_part}_MISSING"
     rows = read_rows(out_dir / "identity_results.csv")
     failures = read_rows(out_dir / "identity_failures.csv")
