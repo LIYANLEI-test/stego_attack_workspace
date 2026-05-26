@@ -231,6 +231,7 @@ def main() -> None:
             clean = bit_metrics(payload_bits, clean_recon.reshape(-1).tolist())
 
             image_path = ""
+            attacked_path = ""
             inversion: dict[str, object] | None = None
             if runner is not None and model is not None:
                 stage = "sample_image"
@@ -254,7 +255,8 @@ def main() -> None:
                             )
                         if args.save_images:
                             suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
-                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                            attacked_path = str(image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                            tvu.save_image(x0_for_recovery[0], attacked_path)
                     elif args.attack_kind == "regen_vae":
                         from regen_attack import apply_regen_vae_tensor
 
@@ -266,7 +268,8 @@ def main() -> None:
                         )
                         if args.save_images:
                             suffix = attack_suffix(args.attack_kind, args.resize_factor, args.regen_quality)
-                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                            attacked_path = str(image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                            tvu.save_image(x0_for_recovery[0], attacked_path)
                     elif args.attack_kind != "identity":
                         x0_for_recovery = attack_roundtrip_tensor_0_1(
                             x0,
@@ -276,7 +279,8 @@ def main() -> None:
                         )
                         if args.save_images:
                             suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
-                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                            attacked_path = str(image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                            tvu.save_image(x0_for_recovery[0], attacked_path)
                     else:
                         x0_for_recovery = x0
                     x_steg = torch.round(x0_for_recovery * 255).clamp(0, 255)
@@ -322,6 +326,7 @@ def main() -> None:
                 "exact_match": metrics["exact_match"],
                 "skip_image": args.skip_image,
                 "image_path": image_path,
+                "attacked_path": attacked_path,
                 "runtime_s": time.perf_counter() - started,
             }
             append_csv_row(csv_path, row)

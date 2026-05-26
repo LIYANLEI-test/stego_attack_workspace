@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-05-25)
 
 **Core value:** Produce reproducible, paper-aligned attack experiments that preserve native baseline semantics and honest provenance labels.
-**Current focus:** Phase 1 - Identity Baseline Finalization, with an immediate baseline re-scope gate before more formal attacks.
+**Current focus:** Phase 1 - Identity Baseline Finalization, with quality-budget attack parameter calibration now available for the runnable non-RGS methods.
 
 ## Current Position
 
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
-Status: Paused for baseline re-scope
-Last activity: 2026-05-26 - Identity-scale attack queue intentionally stopped after the user judged the current baseline set too small/weak.
+Status: Quality-budget attack calibration complete; formal-scale sweeps still pending baseline/sample-count decisions
+Last activity: 2026-05-27 - Selected 10-sample attack parameters under PSNR >= 30 dB and LPIPS <= 0.10.
 
 Progress: [=---------] 5%
 
@@ -48,6 +48,7 @@ Recent decisions affecting current work:
 - Treat `andrekassis/ai-watermark`/UnMarker as an attack-method candidate only, not a hiding/steganography baseline.
 - Treat `XuandongZhao/WatermarkAttacker` Regen-VAE as a stronger adapted attack-method candidate, not a hiding/steganography baseline.
 - Treat `and-mill/semantic-forgery` as related semantic-watermark attack work, not a current hidden-payload destruction baseline.
+- For fair attack comparison, select attack parameters under a fixed stego-vs-attacked image-quality budget: PSNR >= 30 dB and LPIPS <= 0.10. Within budget, choose the strongest payload-destruction setting per method/attack.
 
 ### Current Identity Snapshot
 
@@ -222,6 +223,51 @@ Doc: `docs/semantic_forgery_suitability_20260527.md`
 - Reason: the native attacks target Tree-Ring/Gaussian-Shading semantic watermarks and their verifiers. The scripts generate or reprompt semantic-watermarked diffusion images rather than applying a detector-independent, content-preserving transform to arbitrary stego artifacts before native reveal.
 - No 10-image smoke was run because it would measure a different task, not hidden-payload destruction under the current quality-budget protocol.
 
+### Current Quality-Budget Attack Selection
+
+GSD quick task: `.planning/quick/20260527-quality-budget-attack-selection/`
+
+Doc: `docs/quality_budget_attack_selection_20260527.md`
+
+Result root:
+`/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527`
+
+Budget:
+
+```text
+stego-vs-attacked PSNR >= 30 dB
+stego-vs-attacked LPIPS <= 0.10
+10 samples per method/factor
+```
+
+Selected CSVs:
+
+```text
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary.csv
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary_selected.csv
+```
+
+Selection rule: lower bit accuracy is stronger for bit-payload methods; lower
+recovered-secret PSNR is stronger for image-payload methods. Native recovery
+failure after a saved attacked image is counted as complete payload recovery
+failure while still computing quality from the saved stego/attacked image pair.
+
+Selected parameters:
+
+- CRoSS: resize 1.5, JPEG 50, median blur 3, Gaussian blur 3, Regen-VAE q=5.
+- GSD CIFAR10: resize 1.25, JPEG 80, Regen-VAE q=6, UnMarker high-smoke-25.
+- MAS/GRDH: resize 1.5, JPEG 50, Regen-VAE q=6.
+- MDDM 128-byte pilot: JPEG 70 only; resize, blur, and Regen-VAE had no in-budget destructive candidate in this 10-sample calibration.
+- Pulsar: resize 1.25, JPEG 95, median blur 3, Gaussian blur 3, Regen-VAE q=6. All selected Pulsar attacks caused native reveal failure on the 10 samples while staying inside the quality budget.
+
+Caveats:
+
+- These are 10-sample calibration choices, not final paper-scale tables.
+- RGS remains excluded from attacks for runtime reasons.
+- Diffusion-Stego remains excluded because the current workspace path is projection-only.
+- MDDM remains `native_third_party`.
+- UnMarker is currently integrated only for GSD and is an adapted attack-method candidate.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -233,6 +279,7 @@ Doc: `docs/semantic_forgery_suitability_20260527.md`
 | 2026-05-26 | UnMarker attack candidate smoke | `andrekassis/ai-watermark` kept as adapted attack candidate, not hiding baseline; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.765430 |
 | 2026-05-26 | Strong attack baseline survey | WatermarkAttacker Regen-VAE selected and integrated as adapted attack candidate; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.524089 |
 | 2026-05-27 | Semantic Forgery suitability check | `and-mill/semantic-forgery` classified as related semantic-watermark attack work, not a current hidden-payload destruction baseline |
+| 2026-05-27 | Quality-budget attack selection | Selected 10-sample fair-budget attack parameters under PSNR >= 30 dB and LPIPS <= 0.10 for CRoSS, GSD, MAS/GRDH, MDDM pilot, and Pulsar |
 
 ### Pending Todos
 

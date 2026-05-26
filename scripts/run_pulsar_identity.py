@@ -120,7 +120,10 @@ def append_failure(csv_path: Path, row: dict[str, object]) -> None:
         "payload_sha256",
         "attack_kind",
         "resize_factor",
+        "attack_factor",
         "sample_dtype",
+        "image_path",
+        "attacked_path",
         "stage",
         "error_type",
         "error_summary",
@@ -189,6 +192,8 @@ def main() -> None:
         capacity = None
         message = b""
         stage = "init"
+        image_path = ""
+        attacked_path = ""
         try:
             stage = "seed"
             seed = f"{sample_index}".encode("utf-8")
@@ -207,8 +212,6 @@ def main() -> None:
             generated = stego.generate_with_regions(message)
             last = stego.scheduler.num_inference_steps - 1
             hidden = generated["samples"][last]["hidden"]
-            image_path = ""
-            attacked_path = ""
             if args.save_images or args.attack_kind != "identity":
                 stage = "save_reload_image"
                 image_path = str(image_dir / f"{sample_index:06d}.png")
@@ -282,6 +285,8 @@ def main() -> None:
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
                 "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
                 "sample_dtype": args.sample_dtype,
+                "image_path": image_path,
+                "attacked_path": attacked_path,
                 "stage": stage,
                 "error_type": type(exc).__name__,
                 "error_summary": summarize_exception(exc),

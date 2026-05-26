@@ -163,3 +163,36 @@ def image_metrics(reference_path: Path, recovered_path: Path) -> dict[str, objec
         out["ssim"] = ""
     return out
 
+
+def image_lpips(reference_path: Path, recovered_path: Path, device: str = "cuda") -> float | str:
+    """Compute LPIPS(Alex) for a saved RGB image pair.
+
+    LPIPS expects reasonably sized tensors. Tiny images are upsampled to 64x64 so
+    CIFAR-scale GSD outputs can still be ranked consistently inside this project.
+    """
+
+    try:
+        import torch
+        import torch.nn.functional as F
+        import lpips
+
+        cache_key = "_lpips_alex_model"
+        model = getattr(image_lpips, cache_key, None)
+        model_device = device if torch.cuda.is_available() and device.startswith("cuda") else "cpu"
+        if model is None or getattr(image_lpips, "_lpips_alex_device", None) != model_device:
+            model = lpips.LPIPS(net="alex").to(model_device).eval()
+            setattr(image_lpips, cache_key, model)
+            setattr(image_lpips, "_lpips_alex_device", model_device)
+
+        def load(path: Path) -> torch.Tensor:
+            arr = np.asarray(Image.open(path).convert("RGB"), dtype=np.float32) / 255.0
+            tensor = torch.from_numpy(arr).permute(2, 0, 1).unsqueeze(0)
+            tensor = tensor * 2.0 - 1.0
+            if tensor.shape[-1] < 64 or tensor.shape[-2] < 64:
+                tensor = F.interpolate(tensor, size=(64, 64), mode="bilinear", align_corners=False)
+            return tensor.to(model_device)
+
+        with torch.no_grad():
+            return float(model(load(reference_path), load(recovered_path)).item())
+    except Exception:
+        return ""

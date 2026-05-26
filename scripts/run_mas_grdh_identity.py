@@ -38,7 +38,7 @@ from identity_common import (  # noqa: E402
     traceback_summary,
     utc_now,
 )
-from attack_common import attack_roundtrip_tensor_minus1_1  # noqa: E402
+from attack_common import attack_roundtrip_tensor_minus1_1, attack_suffix  # noqa: E402
 
 
 DEFAULT_MAS_ROOT = WORKSPACE_ROOT / "references" / "mas_GRDH"
@@ -239,6 +239,7 @@ def main() -> None:
             clean = bit_metrics(payload_bits, secret_to_bits(clean_recon))
 
             image_path = ""
+            attacked_path = ""
             inversion: dict[str, object] | None = None
             encoder_decode_error = ""
             recon_error = ""
@@ -282,6 +283,10 @@ def main() -> None:
                                 resize_factor=args.resize_factor,
                                 attack_factor=factor,
                             ).to(device)
+                            if args.save_images:
+                                suffix = attack_suffix(args.attack_kind, args.resize_factor, factor)
+                                attacked_path = str(image_dir / f"{sample_index:06d}_{suffix}.png")
+                                save_tensor_image(model, x0_samples, Path(attacked_path))
                         else:
                             tmp_name = str(out / "tmp" / f"{sample_index:06d}_{args.attack_layer}")
                             Path(tmp_name).parent.mkdir(parents=True, exist_ok=True)
@@ -353,6 +358,7 @@ def main() -> None:
                 "recon_error": recon_error,
                 "skip_image": args.skip_image,
                 "image_path": image_path,
+                "attacked_path": attacked_path,
                 "runtime_s": time.perf_counter() - started,
             }
             append_csv_row(csv_path, row)
