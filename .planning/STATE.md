@@ -46,6 +46,7 @@ Recent decisions affecting current work:
 - Commit and push task updates to GitHub after meaningful state changes.
 - Do not resume formal attack sweeps until the baseline set is re-evaluated and strengthened; the current matrix is useful as pilot/checkpoint data, not final comparative evidence.
 - Treat `andrekassis/ai-watermark`/UnMarker as an attack-method candidate only, not a hiding/steganography baseline.
+- Treat `XuandongZhao/WatermarkAttacker` Regen-VAE as a stronger adapted attack-method candidate, not a hiding/steganography baseline.
 
 ### Current Identity Snapshot
 
@@ -191,6 +192,24 @@ Result root:
 - Result: 10/10 rows, 0 failures, mean bit accuracy 0.765430, mean stego-vs-attacked PSNR 45.083339 dB, mean runtime 34.61 s/sample.
 - Caveat: smoke-only adapted attack result; do not present as full UnMarker paper reproduction.
 
+### Current Strong Attack Baseline Candidate Smoke
+
+GSD quick task: `.planning/quick/20260526-strong-attack-baseline-survey/`
+
+Doc: `docs/strong_attack_baseline_survey_20260526.md`
+
+Result root:
+`/data2/liyanlei/stego_attack_data/attack_runs/regen_vae_smoke_20260526/gsd_cifar10_bmshj2018_factorized_q3_10`
+
+- Decision: `XuandongZhao/WatermarkAttacker` is an attack-method reference, not a steganography baseline.
+- Provenance: official public code for *Invisible Image Watermarks Are Provably Removable Using Generative AI*, NeurIPS 2024.
+- Adapter: `scripts/regen_attack.py` implements a size-preserving Regen-VAE transform using the same CompressAI model family as the reference repository.
+- GSD hook: `scripts/run_gsd_identity.py --attack-kind regen_vae --regen-model bmshj2018-factorized --regen-quality 3`.
+- Generic attack helper support: `attack_common.py` supports `regen_vae`, and CRoSS, MAS/GRDH, MDDM, and Pulsar runner choices now accept it for follow-on smoke tests.
+- Smoke: GSD CIFAR10, 10 samples, `bmshj2018-factorized` quality 3.
+- Result: 10/10 rows, 0 failures, mean bit accuracy 0.524089, BER 0.475911, mean stego-vs-attacked PSNR 25.176627 dB, mean runtime 33.58 s/sample.
+- Caveat: smoke-only adapted attack result; do not present as a full WatermarkAttacker paper reproduction.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -200,6 +219,7 @@ Result root:
 | 2026-05-26 | Unified storage attack pilot | Shared storage round trip ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; all non-RGS methods completed 10/10 rows with 0 failures |
 | 2026-05-26 | Continuous JPEG/blur attack sweeps | Shared JPEG, median blur, and Gaussian blur ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; 45/45 method/factor directories completed with 10 records each |
 | 2026-05-26 | UnMarker attack candidate smoke | `andrekassis/ai-watermark` kept as adapted attack candidate, not hiding baseline; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.765430 |
+| 2026-05-26 | Strong attack baseline survey | WatermarkAttacker Regen-VAE selected and integrated as adapted attack candidate; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.524089 |
 
 ### Pending Todos
 

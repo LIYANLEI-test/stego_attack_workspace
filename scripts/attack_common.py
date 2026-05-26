@@ -81,6 +81,10 @@ def attack_suffix(attack_kind: str, resize_factor: float = 1.0, attack_factor: f
         return f"{attack_kind}_{fmt(attack_factor)}"
     if attack_kind == "unmarker":
         return "unmarker"
+    if attack_kind == "regen_vae":
+        if attack_factor is None:
+            return "regen_vae"
+        return f"regen_vae_q{fmt(attack_factor)}"
     raise ValueError(f"unsupported attack kind: {attack_kind}")
 
 
@@ -108,6 +112,11 @@ def apply_attack_pil(
         if attack_factor is None:
             raise ValueError("gblur attack requires attack_factor")
         return gaussian_blur_pil(image, attack_factor)
+    if attack_kind == "regen_vae":
+        from regen_attack import apply_regen_vae_pil
+
+        quality = int(round(attack_factor)) if attack_factor is not None else 3
+        return apply_regen_vae_pil(image, quality=quality)
     raise ValueError(f"unsupported attack kind: {attack_kind}")
 
 

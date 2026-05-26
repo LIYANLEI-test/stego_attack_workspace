@@ -26,3 +26,7 @@
 	path = references/ai-watermark
 	url = https://github.com/andrekassis/ai-watermark.git
 	ignore = dirty
+[submodule "references/WatermarkAttacker"]
+	path = references/WatermarkAttacker
+	url = https://github.com/XuandongZhao/WatermarkAttacker.git
+	ignore = dirty

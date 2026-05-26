@@ -61,13 +61,20 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--save-images", action="store_true")
     parser.add_argument("--skip-image", action="store_true", help="Only test official DCT mapping/extraction.")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "unmarker"])
+    parser.add_argument(
+        "--attack-kind",
+        default="identity",
+        choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "unmarker", "regen_vae"],
+    )
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--unmarker-stage", default="high", choices=["high", "low"])
     parser.add_argument("--unmarker-profile", default="smoke", choices=["smoke", "paper_like"])
     parser.add_argument("--unmarker-iterations", type=int, default=25)
     parser.add_argument("--unmarker-reference-dir", default=str(WORKSPACE_ROOT / "references" / "ai-watermark"))
+    parser.add_argument("--regen-model", default="bmshj2018-factorized")
+    parser.add_argument("--regen-quality", type=int, default=3)
+    parser.add_argument("--regen-reference-dir", default=str(WORKSPACE_ROOT / "references" / "WatermarkAttacker"))
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
 
@@ -248,6 +255,18 @@ def main() -> None:
                         if args.save_images:
                             suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
                             tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                    elif args.attack_kind == "regen_vae":
+                        from regen_attack import apply_regen_vae_tensor
+
+                        x0_for_recovery = apply_regen_vae_tensor(
+                            x0,
+                            model_name=args.regen_model,
+                            quality=args.regen_quality,
+                            device=device,
+                        )
+                        if args.save_images:
+                            suffix = attack_suffix(args.attack_kind, args.resize_factor, args.regen_quality)
+                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_{suffix}.png")
                     elif args.attack_kind != "identity":
                         x0_for_recovery = attack_roundtrip_tensor_0_1(
                             x0,
@@ -289,6 +308,8 @@ def main() -> None:
                 "unmarker_stage": args.unmarker_stage if args.attack_kind == "unmarker" else "",
                 "unmarker_profile": args.unmarker_profile if args.attack_kind == "unmarker" else "",
                 "unmarker_iterations": args.unmarker_iterations if args.attack_kind == "unmarker" else "",
+                "regen_model": args.regen_model if args.attack_kind == "regen_vae" else "",
+                "regen_quality": args.regen_quality if args.attack_kind == "regen_vae" else "",
                 "payload_bits": len(payload_bits),
                 "payload_sha256": bits_sha256(payload_bits),
                 "clean_bit_errors": clean["bit_errors"],
@@ -350,6 +371,9 @@ def main() -> None:
         "unmarker_profile": args.unmarker_profile if args.attack_kind == "unmarker" else None,
         "unmarker_iterations": args.unmarker_iterations if args.attack_kind == "unmarker" else None,
         "unmarker_reference_dir": str(Path(args.unmarker_reference_dir).resolve()) if args.attack_kind == "unmarker" else None,
+        "regen_model": args.regen_model if args.attack_kind == "regen_vae" else None,
+        "regen_quality": args.regen_quality if args.attack_kind == "regen_vae" else None,
+        "regen_reference_dir": str(Path(args.regen_reference_dir).resolve()) if args.attack_kind == "regen_vae" else None,
         "skip_image": args.skip_image,
         "results_csv": str(csv_path),
         "failures_csv": str(failures_path),
