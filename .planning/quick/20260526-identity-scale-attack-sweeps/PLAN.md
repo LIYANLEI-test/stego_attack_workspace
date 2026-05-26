@@ -72,9 +72,9 @@ initial jobs: cross_resize_0_5_100, gsd_cifar10_resize_0_5_500, mas_grdh_resize_
 Checkpoint:
 
 ```text
-2026-05-26 10:43 CST:
-resize_0.5 completed for CRoSS, GSD CIFAR10, MAS/GRDH, Pulsar, and MDDM pilot.
-resize_0.75 is partially complete/in progress; resize_1.25 has started with CRoSS.
+2026-05-26 13:02 CST:
+resize_0.5 and resize_0.75 completed for CRoSS, GSD CIFAR10, MAS/GRDH, Pulsar, and MDDM pilot.
+resize_1.25 is in progress; CRoSS is complete and GSD/MAS/GRDH/Pulsar/MDDM are running.
 No duplicate sample IDs detected by summarize_unified_attack_runs.py.
 ```
 
