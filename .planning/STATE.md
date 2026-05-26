@@ -45,6 +45,7 @@ Recent decisions affecting current work:
 - Keep Diffusion-Stego labeled `nsdser_reference`; projection-only checks are not full image recovery.
 - Commit and push task updates to GitHub after meaningful state changes.
 - Do not resume formal attack sweeps until the baseline set is re-evaluated and strengthened; the current matrix is useful as pilot/checkpoint data, not final comparative evidence.
+- Treat `andrekassis/ai-watermark`/UnMarker as an attack-method candidate only, not a hiding/steganography baseline.
 
 ### Current Identity Snapshot
 
@@ -175,6 +176,21 @@ Before restarting any formal attack queue:
 - Keep RGS skipped from attacks only if the user accepts the runtime tradeoff after the stronger baseline plan is clear.
 - Update `.planning/` and push the accepted baseline plan before running more long sweeps.
 
+### Current UnMarker Attack Candidate Smoke
+
+GSD quick task: `.planning/quick/20260526-unmarker-attack-candidate-smoke/`
+
+Doc: `docs/unmarker_attack_smoke_20260526.md`
+
+Result root:
+`/data2/liyanlei/stego_attack_data/attack_runs/unmarker_smoke_20260526/gsd_cifar10_unmarker_high_smoke_10`
+
+- Decision: `andrekassis/ai-watermark` is not a steganography baseline; it is an attack-method candidate.
+- Adapter: `scripts/unmarker_attack.py` imports the official UnMarker coordinate optimization core from `references/ai-watermark`.
+- Smoke: GSD CIFAR10, 10 samples, high-frequency UnMarker core, local `smoke` profile, 25 iterations.
+- Result: 10/10 rows, 0 failures, mean bit accuracy 0.765430, mean stego-vs-attacked PSNR 45.083339 dB, mean runtime 34.61 s/sample.
+- Caveat: smoke-only adapted attack result; do not present as full UnMarker paper reproduction.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -183,6 +199,7 @@ Before restarting any formal attack queue:
 | 2026-05-26 | Unified resize attack pilot | Shared resize factors 0.5/0.75/1.25/1.5 ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; Pulsar failed native reveal for all attacked samples |
 | 2026-05-26 | Unified storage attack pilot | Shared storage round trip ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; all non-RGS methods completed 10/10 rows with 0 failures |
 | 2026-05-26 | Continuous JPEG/blur attack sweeps | Shared JPEG, median blur, and Gaussian blur ran on CRoSS, MAS/GRDH, GSD, Pulsar, and MDDM pilot; 45/45 method/factor directories completed with 10 records each |
+| 2026-05-26 | UnMarker attack candidate smoke | `andrekassis/ai-watermark` kept as adapted attack candidate, not hiding baseline; GSD CIFAR10 10/10 rows, 0 failures, mean bit accuracy 0.765430 |
 
 ### Pending Todos
 

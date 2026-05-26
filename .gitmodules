@@ -22,3 +22,7 @@
 	path = references/RGS
 	url = https://github.com/FBW-JNU/RGS.git
 	ignore = dirty
+[submodule "references/ai-watermark"]
+	path = references/ai-watermark
+	url = https://github.com/andrekassis/ai-watermark.git
+	ignore = dirty

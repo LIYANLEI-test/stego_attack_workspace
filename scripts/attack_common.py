@@ -79,6 +79,8 @@ def attack_suffix(attack_kind: str, resize_factor: float = 1.0, attack_factor: f
         if attack_factor is None:
             raise ValueError(f"{attack_kind} requires attack_factor")
         return f"{attack_kind}_{fmt(attack_factor)}"
+    if attack_kind == "unmarker":
+        return "unmarker"
     raise ValueError(f"unsupported attack kind: {attack_kind}")
 
 

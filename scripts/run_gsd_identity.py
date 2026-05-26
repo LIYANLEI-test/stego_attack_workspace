@@ -61,9 +61,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--save-images", action="store_true")
     parser.add_argument("--skip-image", action="store_true", help="Only test official DCT mapping/extraction.")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "unmarker"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--attack-factor", type=float, default=None)
+    parser.add_argument("--unmarker-stage", default="high", choices=["high", "low"])
+    parser.add_argument("--unmarker-profile", default="smoke", choices=["smoke", "paper_like"])
+    parser.add_argument("--unmarker-iterations", type=int, default=25)
+    parser.add_argument("--unmarker-reference-dir", default=str(WORKSPACE_ROOT / "references" / "ai-watermark"))
     parser.add_argument("--force", action="store_true")
     return parser.parse_args()
 
@@ -230,7 +234,21 @@ def main() -> None:
                     if args.save_images:
                         image_path = str(image_dir / f"stego_{sample_index:06d}.png")
                         tvu.save_image(x0[0], image_path)
-                    if args.attack_kind != "identity":
+                    if args.attack_kind == "unmarker":
+                        from unmarker_attack import apply_unmarker_core_tensor
+
+                        with torch.enable_grad():
+                            x0_for_recovery = apply_unmarker_core_tensor(
+                                x0.detach(),
+                                stage=args.unmarker_stage,
+                                profile=args.unmarker_profile,
+                                max_iterations=args.unmarker_iterations,
+                                unmarker_root=Path(args.unmarker_reference_dir).resolve(),
+                            )
+                        if args.save_images:
+                            suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
+                            tvu.save_image(x0_for_recovery[0], image_dir / f"stego_{sample_index:06d}_{suffix}.png")
+                    elif args.attack_kind != "identity":
                         x0_for_recovery = attack_roundtrip_tensor_0_1(
                             x0,
                             args.attack_kind,
@@ -268,6 +286,9 @@ def main() -> None:
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
                 "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
+                "unmarker_stage": args.unmarker_stage if args.attack_kind == "unmarker" else "",
+                "unmarker_profile": args.unmarker_profile if args.attack_kind == "unmarker" else "",
+                "unmarker_iterations": args.unmarker_iterations if args.attack_kind == "unmarker" else "",
                 "payload_bits": len(payload_bits),
                 "payload_sha256": bits_sha256(payload_bits),
                 "clean_bit_errors": clean["bit_errors"],
@@ -325,6 +346,10 @@ def main() -> None:
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
         "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None,
+        "unmarker_stage": args.unmarker_stage if args.attack_kind == "unmarker" else None,
+        "unmarker_profile": args.unmarker_profile if args.attack_kind == "unmarker" else None,
+        "unmarker_iterations": args.unmarker_iterations if args.attack_kind == "unmarker" else None,
+        "unmarker_reference_dir": str(Path(args.unmarker_reference_dir).resolve()) if args.attack_kind == "unmarker" else None,
         "skip_image": args.skip_image,
         "results_csv": str(csv_path),
         "failures_csv": str(failures_path),
