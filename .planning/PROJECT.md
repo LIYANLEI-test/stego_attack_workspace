@@ -4,7 +4,10 @@
 
 This is a research workspace for steganographic message-destruction experiments. It integrates native or native-like generation/recovery paths for CRoSS, Pulsar, GSD, MAS/GRDH, MDDM, Diffusion-Stego, and RGS, then uses their generated stego artifacts as attack targets.
 
-The immediate work is to finish identity baselines, keep their provenance labels honest, and build attack experiments whose results can be compared against those identity runs.
+Identity baselines are now recorded for the runnable native/native-like paths.
+The immediate work is the running held-out selected-attack evaluation under a
+fixed image-quality budget, with provenance and failure handling suitable for
+paper claims.
 
 ## Core Value
 
@@ -21,10 +24,10 @@ Produce reproducible, paper-aligned attack experiments that preserve each baseli
 
 ### Active
 
-- [ ] Finish and summarize all native identity baselines, including the still-running RGS 100-image identity job.
-- [ ] Preserve method-native payload shape, capacity, embedding, sampling, inversion, decoding, ECC, and metric semantics.
-- [ ] Design attack protocol(s) that can destroy or degrade hidden messages without rewriting baseline generation logic.
-- [ ] Implement resumable attack runners over the generated stego artifacts and existing identity metadata.
+- [x] Finish and summarize current runnable native identity baselines, including RGS 100-image identity.
+- [x] Preserve method-native payload shape, capacity, embedding, sampling, inversion, decoding, ECC, and metric semantics.
+- [x] Design quality-budget attack protocols that degrade hidden messages without rewriting baseline generation logic.
+- [x] Implement resumable attack runners over the generated stego artifacts and existing identity metadata.
 - [ ] Evaluate message destruction, image quality, and recovery degradation against each method's identity baseline.
 - [ ] Keep scripts, configs, docs, summaries, and planning state in GitHub; keep large data, models, and run outputs under `/data2`.
 
@@ -64,7 +67,7 @@ Current result root:
 /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522
 ```
 
-As of 2026-05-25 17:15 CST, completed or current identity records include:
+As of 2026-05-27, completed identity records include:
 
 - Pulsar: 461 exact successes, 39 native failures, all 500 sample indices recorded.
 - CRoSS: 100/100 records, mean recovery PSNR about 21.956 dB, mean SSIM about 0.675, exact pixel match 0/100.
@@ -72,7 +75,17 @@ As of 2026-05-25 17:15 CST, completed or current identity records include:
 - MAS/GRDH: 500/500 records, mean bit accuracy about 0.958, exact 0/500.
 - MDDM 128-byte pilot: 50/50 records, mean bit accuracy about 0.999, exact 32/50; capacity exploration only.
 - Diffusion-Stego MN/MB/MC/Multi-bits projection checks: each 500/500 exact; projection-only.
-- RGS: 62/100 records so far, process still running, mean recovery PSNR about 23.015 dB, mean indice accuracy about 0.993.
+- RGS: 100/100 records, 0 failures, mean recovery PSNR about 23.316 dB.
+
+Formal attack evaluation:
+
+- Parameters were selected on calibration sample indices `0-9` under
+  stego-vs-attacked PSNR >= 30 dB and LPIPS <= 0.10.
+- Formal paper summaries exclude `0-9` by default, leaving held-out counts of
+  CRoSS `90`, GSD/MAS/GRDH/Pulsar `490`, and MDDM pilot `40`.
+- Main-table candidates are CRoSS, GSD CIFAR10, MAS/GRDH, and Pulsar; MDDM
+  remains appendix-only, and RGS/Diffusion-Stego remain excluded from current
+  attack claims for runtime/full-image-path reasons.
 
 ## Constraints
 
@@ -91,7 +104,10 @@ As of 2026-05-25 17:15 CST, completed or current identity records include:
 | Keep payload shape method-native | Forcing one common payload would make identity and attack results less paper-aligned | Good |
 | Label MDDM as `native_third_party` | The integrated backend is not official author code | Good |
 | Label Diffusion-Stego as `nsdser_reference` and projection checks as projection-only | The current integration comes from supplied NS-DSer reference code rather than a selected official repo | Good |
-| Use GSD planning state for future work | The previous chat lost continuity during compaction/reconnect | Pending |
+| Use GSD planning state for future work | The previous chat lost continuity during compaction/reconnect | Good |
+| Fix an advance quality budget of PSNR >= 30 dB and LPIPS <= 0.10 | Quality-constrained payload destruction is comparable across attacks | Good |
+| Exclude calibration indices `0-9` from paper summaries | Prevent attack-parameter selection leakage into evaluation | Good |
+| Count failed recovery as zero only after a measurable attacked image exists | Avoid reporting runner failures as attack effectiveness | Good |
 
 ---
-*Last updated: 2026-05-25 after manual GSD initialization from existing repository docs and current identity results.*
+*Last updated: 2026-05-27 during held-out selected-attack evaluation.*

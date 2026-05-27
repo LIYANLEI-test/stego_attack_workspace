@@ -9,6 +9,10 @@ from pathlib import Path
 
 
 DEFAULT_ROOT = Path("/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527")
+MAIN_METHODS = {"cross", "gsd_cifar10", "mas_grdh", "pulsar"}
+APPENDIX_METHODS = {"mddm_128_pilot"}
+PSNR_MIN = 30.0
+LPIPS_MAX = 0.10
 
 
 def parse_args() -> argparse.Namespace:
@@ -17,7 +21,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--deltas", default=str(DEFAULT_ROOT / "selected_attack_deltas.csv"))
     parser.add_argument("--output-md", default=str(DEFAULT_ROOT / "paper_tables.md"))
     parser.add_argument("--output-tex", default=str(DEFAULT_ROOT / "paper_tables.tex"))
-    parser.add_argument("--include-incomplete", action="store_true")
+    parser.add_argument(
+        "--include-incomplete",
+        action="store_true",
+        help="Deprecated compatibility flag; rendered readiness tables always retain incomplete selected rows.",
+    )
     return parser.parse_args()
 
 
@@ -85,8 +93,6 @@ def merged_rows(summary_rows: list[dict[str, str]], delta_rows: list[dict[str, s
     delta_by_key = {key(row): row for row in delta_rows}
     out = []
     for row in summary_rows:
-        if not include_incomplete and row.get("complete") != "True":
-            continue
         merged = dict(row)
         merged.update({f"delta_{k}": v for k, v in delta_by_key.get(key(row), {}).items()})
         out.append(merged)
@@ -99,38 +105,82 @@ def failure_display(row: dict[str, str]) -> str:
     return pct(row.get("failure_rate"))
 
 
-def render_markdown(rows: list[dict[str, str]]) -> str:
+def table_tier(row: dict[str, str]) -> str:
+    if row.get("method") in APPENDIX_METHODS or row.get("provenance") == "native_third_party":
+        return "appendix"
+    if row.get("method") in MAIN_METHODS:
+        return "main"
+    return "exclude"
+
+
+def budget_status(row: dict[str, str]) -> str:
+    total = as_float(row.get("total"))
+    psnr = as_float(row.get("quality_psnr_mean"))
+    lpips = as_float(row.get("quality_lpips_mean"))
+    psnr_n = as_float(row.get("quality_psnr_n"))
+    lpips_n = as_float(row.get("quality_lpips_n"))
+    unscorable = as_float(row.get("unscorable_failures"))
+    if unscorable is not None and unscorable > 0:
+        return "fail"
+    if psnr is None:
+        return "pending"
+    if lpips is None:
+        return "partial"
+    if total is not None and (psnr_n != total or lpips_n != total):
+        return "fail"
+    if psnr >= PSNR_MIN and lpips <= LPIPS_MAX:
+        return "pass"
+    return "fail"
+
+
+def markdown_table(rows: list[dict[str, str]], heading: str) -> list[str]:
     lines = [
-        "# Selected Attack Paper Tables",
+        f"## {heading}",
         "",
-        "## Main Table",
-        "",
-        "| Method | Attack | Done | Metric | Attacked | Delta | Quality PSNR | Failure |",
-        "|--------|--------|------|--------|----------|-------|--------------|---------|",
+        "| Method | Attack | Done | Metric | Attacked | Delta (all) | Delta (ID-ok) | PSNR | LPIPS | Budget | Failure |",
+        "|--------|--------|------|--------|----------|-------------|---------------|------|-------|--------|---------|",
     ]
     for row in rows:
         done = f"{row.get('total', '')}/{row.get('target', '')}"
         lines.append(
-            "| {method} | {attack} | {done} | {metric} | {attacked} | {delta} | {psnr} | {failure} |".format(
+            "| {method} | {attack} | {done} | {metric} | {attacked} | {delta} | {conditional_delta} | {psnr} | {lpips} | {budget} | {failure} |".format(
                 method=row.get("method", ""),
                 attack=display_attack(row),
                 done=done,
                 metric=display_metric(row),
                 attacked=fmt(row.get("recovery_mean"), 4),
                 delta=fmt(row.get("delta_delta_mean"), 4),
+                conditional_delta=fmt(row.get("delta_delta_on_identity_success_mean"), 4),
                 psnr=fmt(row.get("quality_psnr_mean"), 2),
+                lpips=fmt(row.get("quality_lpips_mean"), 4),
+                budget=budget_status(row),
                 failure=failure_display(row),
             )
         )
+    lines.append("")
+    return lines
+
+
+def render_markdown(rows: list[dict[str, str]]) -> str:
+    main_rows = [row for row in rows if table_tier(row) == "main"]
+    appendix_rows = [row for row in rows if table_tier(row) == "appendix"]
+    lines = ["# Selected Attack Paper Tables", ""]
+    lines.extend(markdown_table(main_rows, "Main Table"))
+    if appendix_rows:
+        lines.extend(markdown_table(appendix_rows, "Appendix Pilot Table"))
     lines.extend(
         [
-            "",
             "Notes:",
             "",
-            "- `Delta` is identity metric minus attacked metric over overlapping sample indices.",
+            "- `Delta (all)` is identity metric minus attacked metric over overlapping sample indices.",
+            "- `Delta (ID-ok)` restricts comparison to indices successfully recovered in the no-attack identity run.",
+            "- Formal rows exclude calibration sample indices `0-9`, which were used to select attack parameters.",
+            "- A row supports fixed-budget claims only when `Budget` is `pass` (PSNR >= 30 dB and LPIPS <= 0.10).",
+            "- Only native failures after a saved attacked image exists are scored as zero recovery; unscorable runner failures invalidate a row.",
             "- For bit payload methods, lower attacked bit accuracy means stronger attack.",
             "- For image payload methods, lower recovered-secret PSNR means stronger attack.",
-            "- Incomplete rows are live-progress rows unless rendered after the queue completes.",
+            "- Regen-VAE and UnMarker rows are adapted attack baselines, not full reproductions of their papers.",
+            "- Incomplete rows remain visible in readiness tables; after queue completion they must be resolved or excluded with explanation.",
             "",
         ]
     )
@@ -147,26 +197,38 @@ def latex_escape(text: str) -> str:
     )
 
 
-def render_latex(rows: list[dict[str, str]]) -> str:
+def latex_table(rows: list[dict[str, str]], caption: str) -> list[str]:
     lines = [
-        "\\begin{tabular}{lllrrrr}",
+        f"% {caption}",
+        "\\begin{tabular}{lllrrrrrr}",
         "\\toprule",
-        "Method & Attack & Metric & Attacked & Delta & PSNR & Fail. \\\\",
+        "Method & Attack & Metric & Attacked & $\\Delta$ all & $\\Delta$ ID-ok & PSNR & LPIPS & Fail. \\\\",
         "\\midrule",
     ]
     for row in rows:
         lines.append(
-            "{method} & {attack} & {metric} & {attacked} & {delta} & {psnr} & {failure} \\\\".format(
+            "{method} & {attack} & {metric} & {attacked} & {delta} & {conditional_delta} & {psnr} & {lpips} & {failure} \\\\".format(
                 method=latex_escape(row.get("method", "")),
                 attack=latex_escape(display_attack(row)),
                 metric=latex_escape(display_metric(row)),
                 attacked=fmt(row.get("recovery_mean"), 4),
                 delta=fmt(row.get("delta_delta_mean"), 4),
+                conditional_delta=fmt(row.get("delta_delta_on_identity_success_mean"), 4),
                 psnr=fmt(row.get("quality_psnr_mean"), 2),
+                lpips=fmt(row.get("quality_lpips_mean"), 4),
                 failure=latex_escape(failure_display(row)),
             )
         )
     lines.extend(["\\bottomrule", "\\end{tabular}", ""])
+    return lines
+
+
+def render_latex(rows: list[dict[str, str]]) -> str:
+    main_rows = [row for row in rows if table_tier(row) == "main"]
+    appendix_rows = [row for row in rows if table_tier(row) == "appendix"]
+    lines = latex_table(main_rows, "Main table; include only quality-budget passing rows in formal claims.")
+    if appendix_rows:
+        lines.extend(latex_table(appendix_rows, "Appendix pilot table."))
     return "\n".join(lines)
 
 

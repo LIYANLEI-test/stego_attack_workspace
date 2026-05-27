@@ -98,7 +98,7 @@ def score_metric_name(method: str, rows: list[dict[str, str]]) -> str:
 
 
 def row_pair_paths(row: dict[str, str]) -> tuple[Path, Path] | None:
-    stego = row.get("image_path") or row.get("stego_path")
+    stego = row.get("stego_path") or row.get("image_path")
     attacked = row.get("attacked_path")
     if not stego or not attacked:
         return None
@@ -121,7 +121,9 @@ def summarize_dir(path: Path, device: str) -> dict[str, object] | None:
     quality_lpips: list[float] = []
     quality_ssim: list[float] = []
     quality_mae: list[float] = []
-    for row in rows + failures:
+    scorable_failures = [row for row in failures if row_pair_paths(row) is not None]
+    unscorable_failures = len(failures) - len(scorable_failures)
+    for row in rows + scorable_failures:
         pair = row_pair_paths(row)
         if pair is None:
             psnr = as_float(row.get("attack_psnr"))
@@ -152,9 +154,9 @@ def summarize_dir(path: Path, device: str) -> dict[str, object] | None:
         # A native reveal/decode failure after an attacked image was produced is
         # a complete payload-recovery failure for attack selection. Quality is
         # still computed independently from image_path/attacked_path above.
-        metric_values.extend(0.0 for _ in failures)
+        metric_values.extend(0.0 for _ in scorable_failures)
     runtime_values = [
-        value for row in rows + failures if (value := as_float(row.get("runtime_s"))) is not None
+        value for row in rows + scorable_failures if (value := as_float(row.get("runtime_s"))) is not None
     ]
     return {
         "name": path.name,
@@ -162,11 +164,15 @@ def summarize_dir(path: Path, device: str) -> dict[str, object] | None:
         "attack": parsed.attack,
         "factor": parsed.factor,
         "rows": len(rows),
-        "failures": len(failures),
+        "failures": len(scorable_failures),
+        "unscorable_failures": unscorable_failures,
+        "scored_total": len(rows) + len(scorable_failures),
         "metric": metric_name,
         "metric_mean": mean(metric_values),
         "quality_psnr_mean": mean(quality_psnr),
+        "quality_psnr_n": len(quality_psnr),
         "quality_lpips_mean": mean(quality_lpips),
+        "quality_lpips_n": len(quality_lpips),
         "quality_ssim_mean": mean(quality_ssim),
         "quality_mae_mean": mean(quality_mae),
         "exact": exact_count(rows),
@@ -177,9 +183,16 @@ def summarize_dir(path: Path, device: str) -> dict[str, object] | None:
 def is_within_budget(row: dict[str, object], psnr_min: float, lpips_max: float) -> bool:
     psnr = as_float(row.get("quality_psnr_mean"))
     lpips_value = as_float(row.get("quality_lpips_mean"))
+    scored_total = int(row.get("scored_total", 0) or 0)
+    psnr_n = int(row.get("quality_psnr_n", 0) or 0)
+    lpips_n = int(row.get("quality_lpips_n", 0) or 0)
+    if scored_total == 0 or int(row.get("unscorable_failures", 0) or 0):
+        return False
+    if psnr_n != scored_total or lpips_n != scored_total:
+        return False
     if psnr is None or psnr < psnr_min:
         return False
-    if lpips_value is not None and lpips_value > lpips_max:
+    if lpips_value is None or lpips_value > lpips_max:
         return False
     return True
 
@@ -235,10 +248,14 @@ def main() -> int:
         "within_budget",
         "rows",
         "failures",
+        "unscorable_failures",
+        "scored_total",
         "metric",
         "metric_mean",
         "quality_psnr_mean",
+        "quality_psnr_n",
         "quality_lpips_mean",
+        "quality_lpips_n",
         "quality_ssim_mean",
         "quality_mae_mean",
         "exact",
@@ -265,7 +282,7 @@ def main() -> int:
             writer.writerow({field: out.get(field, "") for field in fields})
 
     print(f"root: {root}")
-    print(f"budget: PSNR >= {args.psnr_min:g} dB, LPIPS <= {args.lpips_max:g} when available")
+    print(f"budget: PSNR >= {args.psnr_min:g} dB, LPIPS <= {args.lpips_max:g} (both required)")
     print(f"summaries: {len(summaries)}")
     print(f"summary_csv: {output_path}")
     print(f"selected_csv: {selected_path}")

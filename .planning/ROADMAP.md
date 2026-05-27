@@ -10,9 +10,9 @@ The v1 path starts by closing the native identity baseline ledger, then defines 
 - Integer phases (1, 2, 3): planned milestone work.
 - Decimal phases (2.1, 2.2): urgent insertions if needed.
 
-- [ ] **Phase 1: Identity Baseline Finalization** - Finish RGS, consolidate identity summaries, and lock provenance labels.
-- [ ] **Phase 2: Attack Protocol Design** - Define attack layers, budgets, metrics, and method-specific constraints.
-- [ ] **Phase 3: Attack Runner Implementation** - Build resumable attack execution over stego artifacts and identity metadata.
+- [x] **Phase 1: Identity Baseline Finalization** - Finish RGS, consolidate identity summaries, and lock provenance labels.
+- [x] **Phase 2: Attack Protocol Design** - Define attack layers, budgets, metrics, and method-specific constraints.
+- [x] **Phase 3: Attack Runner Implementation** - Build resumable attack execution over stego artifacts and identity metadata.
 - [ ] **Phase 4: Evaluation And Analysis** - Compute message destruction and quality metrics against identity baselines.
 - [ ] **Phase 5: Reproducibility And Release Hygiene** - Make results inspectable through docs, manifests, checks, and pushed Git state.
 
@@ -29,10 +29,10 @@ The v1 path starts by closing the native identity baseline ledger, then defines 
   4. GitHub contains only scripts, configs, docs, and summary/planning state, not large generated artifacts.
 **Plans**: 3 plans
 
-Plans:
-- [ ] 01-01: Monitor or resume RGS and capture final or current status.
-- [ ] 01-02: Generate/update identity summary documentation from result CSVs and logs.
-- [ ] 01-03: Audit provenance labels, docs, and git-tracked files before committing.
+Plans (completed through quick tasks and status updates):
+- [x] 01-01: Monitor or resume RGS and capture final or current status.
+- [x] 01-02: Generate/update identity summary documentation from result CSVs and logs.
+- [x] 01-03: Audit provenance labels, docs, and git-tracked files before committing.
 
 ### Phase 2: Attack Protocol Design
 **Goal**: Define a paper-aligned message-destruction protocol that can be executed without changing baseline method semantics.
@@ -45,10 +45,10 @@ Plans:
   4. Smoke-scale acceptance criteria exist before long attack sweeps.
 **Plans**: 3 plans
 
-Plans:
-- [ ] 02-01: Specify common attack schema and metric contracts.
-- [ ] 02-02: Map attack feasibility and constraints per baseline.
-- [ ] 02-03: Define smoke and formal sweep configurations.
+Plans (completed through quick tasks):
+- [x] 02-01: Specify common attack schema and metric contracts.
+- [x] 02-02: Map attack feasibility and constraints per baseline.
+- [x] 02-03: Define smoke and formal sweep configurations.
 
 ### Phase 3: Attack Runner Implementation
 **Goal**: Implement runners that apply selected attacks to stego artifacts and evaluate recovery degradation with structured outputs.
@@ -61,11 +61,11 @@ Plans:
   4. Failures are logged per sample without aborting entire sweeps.
 **Plans**: 4 plans
 
-Plans:
-- [ ] 03-01: Add shared attack metadata/result utilities.
-- [ ] 03-02: Implement first image-payload attack runner path.
-- [ ] 03-03: Implement first bit-payload attack runner path.
-- [ ] 03-04: Add smoke commands and failure/resume checks.
+Plans (completed through quick tasks):
+- [x] 03-01: Add shared attack metadata/result utilities.
+- [x] 03-02: Implement first image-payload attack runner path.
+- [x] 03-03: Implement first bit-payload attack runner path.
+- [x] 03-04: Add smoke commands and failure/resume checks.
 
 ### Phase 4: Evaluation And Analysis
 **Goal**: Produce interpretable attack results showing message destruction, image quality, and deviations from identity baselines.
@@ -106,8 +106,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Identity Baseline Finalization | 0/3 | In progress | - |
-| 2. Attack Protocol Design | 0/3 | Not started | - |
-| 3. Attack Runner Implementation | 0/4 | Not started | - |
-| 4. Evaluation And Analysis | 0/3 | Not started | - |
-| 5. Reproducibility And Release Hygiene | 0/3 | Not started | - |
+| 1. Identity Baseline Finalization | 3/3 | Complete | 2026-05-27 |
+| 2. Attack Protocol Design | 3/3 | Complete | 2026-05-27 |
+| 3. Attack Runner Implementation | 4/4 | Complete | 2026-05-27 |
+| 4. Evaluation And Analysis | 1/3 | In progress | - |
+| 5. Reproducibility And Release Hygiene | 1/3 | In progress | - |

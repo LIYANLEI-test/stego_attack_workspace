@@ -19,19 +19,19 @@ The framework separates three things that are easy to mix up:
 Use these methods in the main paper table if the formal selected-attack runs
 complete at the planned counts:
 
-| Method | Payload type | Label | Formal count | Main recovery metric |
-|--------|--------------|-------|--------------|----------------------|
-| CRoSS | image payload | `native_official` | 100 | recovered-secret PSNR |
-| GSD CIFAR10 | bit payload | `native_official` | 500 | bit accuracy |
-| MAS/GRDH | bit payload | `native_official` | 500 | bit accuracy |
-| Pulsar | bit payload | `native_official` | 500 | bit accuracy and native failure rate |
+| Method | Payload type | Label | Raw generated | Formal held-out | Main recovery metric |
+|--------|--------------|-------|---------------|-----------------|----------------------|
+| CRoSS | image payload | `native_official` | 100 | 90 | recovered-secret PSNR |
+| GSD CIFAR10 | bit payload | `native_official` | 500 | 490 | bit accuracy |
+| MAS/GRDH | bit payload | `native_official` | 500 | 490 | bit accuracy |
+| Pulsar | bit payload | `native_official` | 500 | 490 | bit accuracy and native failure rate |
 
 MDDM should remain outside the primary claim unless an official implementation
 is integrated or the text clearly labels it as `native_third_party` pilot:
 
-| Method | Payload type | Label | Count | Use |
-|--------|--------------|-------|-------|-----|
-| MDDM 128-byte | text/bit payload | `native_third_party` | 50 | pilot/appendix only |
+| Method | Payload type | Label | Raw / held-out | Use |
+|--------|--------------|-------|----------------|-----|
+| MDDM 128-byte | text/bit payload | `native_third_party` | 50 / 40 | pilot/appendix only |
 
 Currently excluded from attack main tables:
 
@@ -51,6 +51,30 @@ Quality budget:
 stego-vs-attacked PSNR >= 30 dB
 stego-vs-attacked LPIPS <= 0.10
 ```
+
+## Formal Split And Quality Contract
+
+Attack parameters were selected using calibration sample indices `0-9`.
+Although the queue produces the full deterministic raw set for traceability,
+paper summaries and paired identity deltas exclude these ten indices by
+default. The formal held-out set is therefore `10-99` for CRoSS, `10-49` for
+MDDM pilot, and `10-499` for the 500-sample methods. Use
+`--include-calibration` only for diagnostic reconstruction of the raw queue,
+not in paper tables.
+
+The quality budget is evaluated as the mean stego-vs-attacked PSNR and mean
+LPIPS over every recorded held-out sample for a method/attack row. Native
+reveal failures remain in this quality calculation using their saved attacked
+image. Final reports must have PSNR and LPIPS coverage equal to the held-out
+row count. If a preselected parameter fails either held-out quality threshold,
+the row is marked out of budget and excluded from budget-constrained claims;
+it is not retuned on the held-out set.
+
+A reveal/recovery failure is scored as zero payload recovery only when the
+attacked image and corresponding stego image were successfully saved and can
+be measured. Failures before that point are `unscorable_failures`: they
+invalidate completeness for that row and require diagnosis or a documented
+rerun, rather than being reported as attack success.
 
 Selected formal matrix source of truth:
 
@@ -144,9 +168,10 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
   --root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527
 ```
 
-The manifest records the git commit, GPU inventory, quality budget, and script
-entry points for reproducibility. Keep it under `/data2`; do not commit the
-generated JSON, CSV, Markdown, or TeX result artifacts.
+The manifest records the git commit, GPU inventory, quality budget, evaluation
+split, raw and formal counts, and script entry points for reproducibility.
+Keep it under `/data2`; do not commit the generated JSON, CSV, Markdown, or
+TeX result artifacts.
 
 Paper-readiness audit:
 
@@ -160,7 +185,11 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
 The audit marks rows as main/appendix/excluded, flags adapted attacks and pilot
 baselines, and checks whether PSNR/LPIPS evidence is present for the quality
 budget. Live summaries without LPIPS recomputation are marked `partial`, not
-treated as fully budget-verified.
+treated as fully budget-verified. Pending, incomplete, and unscorable rows
+remain in readiness reports so a failed experiment cannot silently disappear
+from final review. Rendered Markdown/LaTeX readiness tables also retain these
+rows; only claim-bearing presentation tables may later select verified
+budget-passing rows with the exclusion stated explicitly.
 
 ## Reporting Rules
 
@@ -176,6 +205,9 @@ Main table columns:
 | 95% CI | normal-approximation CI over samples |
 | Failures | native reveal/recovery failures after attack |
 
+All table counts refer to the held-out subset unless explicitly labeled
+`raw generated`.
+
 Delta table columns:
 
 | Column | Meaning |
@@ -185,6 +217,12 @@ Delta table columns:
 | delta_mean | identity minus attacked metric |
 | delta_ci95 | normal-approximation 95% CI for per-sample deltas |
 | relative_drop | `delta_mean / identity_overlap_mean` |
+
+Because Pulsar has native failures even without attacks, delta reports also
+include a conditional comparison restricted to sample indices whose identity
+run successfully recovered a payload. The unconditional aggregate reflects
+end-to-end usability; the conditional delta more directly isolates
+attack-induced degradation from pre-existing native failure.
 
 For bit payload methods:
 
@@ -223,9 +261,13 @@ scheme-specific evaluation harness is reproduced separately.
   reveal/recovery.
 - Image quality is measured between stego and attacked images.
 - Parameter choice is fixed before formal-scale sweeps.
+- Calibration indices `0-9` are excluded from all formal paper estimates.
 - Identity baseline and attacked samples use the same deterministic sample
   indices.
-- Failures are included in aggregate payload-destruction metrics.
+- Native reveal/recovery failures after a saved attacked image are included in
+  aggregate payload-destruction metrics as zero recovery.
+- A held-out row that fails its quality budget is reported but excluded from
+  fixed-budget comparisons without retuning on that set.
 - Large outputs stay under `/data2/liyanlei/...`; Git tracks scripts, docs, and
   planning state only.
 
@@ -262,9 +304,11 @@ transforms under this workspace's native-reveal protocol.
 
 ## Next Work To Strengthen Publishability
 
-1. Run the selected attack queue at formal counts.
-2. Add identity-vs-attacked delta tables per method.
-3. Add a failure-rate table for methods that throw native reveal failures.
+1. Complete the running selected-attack queue and final held-out reports.
+2. Use identity-vs-attacked delta tables and explicit failure-rate reporting in
+   the paper analysis.
+3. Add robust uncertainty estimates and aggregate attack-family comparisons
+   only after quality-budget audit passes.
 4. Decide whether to spend compute on RGS selected attacks or explicitly keep
    it as identity-only due to runtime.
 5. Either integrate an official MDDM implementation or keep MDDM out of main

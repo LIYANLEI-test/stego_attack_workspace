@@ -24,7 +24,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--deltas", default="")
     parser.add_argument("--output-csv", default="")
     parser.add_argument("--output-md", default="")
-    parser.add_argument("--include-incomplete", action="store_true")
+    parser.add_argument(
+        "--include-incomplete",
+        action="store_true",
+        help="Deprecated compatibility flag; audits always retain incomplete selected rows.",
+    )
     return parser.parse_args()
 
 
@@ -51,6 +55,16 @@ def key(row: dict[str, str]) -> tuple[str, str, str]:
 
 
 def budget_status(row: dict[str, str]) -> tuple[str, str]:
+    unscorable_failures = as_float(row.get("unscorable_failures"))
+    if unscorable_failures is not None and unscorable_failures > 0:
+        return "fail", "Unscorable runner failures are present; do not interpret them as attack success."
+    if str(row.get("total", "")).strip() in {"", "0", "0.0"}:
+        return "pending", "No held-out results recorded yet."
+    total = as_float(row.get("total"))
+    psnr_n = as_float(row.get("quality_psnr_n"))
+    lpips_n = as_float(row.get("quality_lpips_n"))
+    if total is not None and psnr_n != total:
+        return "fail", "PSNR coverage is incomplete for recorded held-out samples."
     psnr = as_float(row.get("quality_psnr_mean"))
     lpips = as_float(row.get("quality_lpips_mean"))
     problems = []
@@ -60,6 +74,8 @@ def budget_status(row: dict[str, str]) -> tuple[str, str]:
         problems.append(f"psnr<{PSNR_MIN:g}")
     if lpips is None:
         problems.append("lpips_not_computed")
+    elif total is not None and lpips_n != total:
+        problems.append("lpips_coverage_incomplete")
     elif lpips > LPIPS_MAX:
         problems.append(f"lpips>{LPIPS_MAX:g}")
     if problems == ["lpips_not_computed"]:
@@ -87,6 +103,9 @@ def caveats(row: dict[str, str], budget: str) -> str:
         out.append("adapted_attack_not_full_reproduction")
     if row.get("provenance") in PILOT_PROVENANCE:
         out.append("pilot_third_party")
+    unscorable = as_float(row.get("unscorable_failures"))
+    if unscorable is not None and unscorable > 0:
+        out.append(f"unscorable_failures={int(unscorable)}")
     failure_rate = as_float(row.get("failure_rate"))
     if failure_rate is not None and failure_rate > 0:
         out.append(f"failure_rate={failure_rate:.3f}")
@@ -102,8 +121,6 @@ def audit_rows(summary_rows: list[dict[str, str]], delta_rows: list[dict[str, st
     deltas_by_key = {key(row): row for row in delta_rows}
     audited = []
     for row in summary_rows:
-        if not include_incomplete and not as_bool(row.get("complete")):
-            continue
         delta = deltas_by_key.get(key(row), {})
         budget, budget_note = budget_status(row)
         audited.append(
@@ -113,16 +130,25 @@ def audit_rows(summary_rows: list[dict[str, str]], delta_rows: list[dict[str, st
                 "factor": row.get("factor", ""),
                 "tier": table_tier(row),
                 "provenance": row.get("provenance", ""),
+                "baseline_provenance": row.get("baseline_provenance", ""),
+                "attack_provenance": row.get("attack_provenance", ""),
                 "complete": row.get("complete", ""),
+                "evaluation_split": row.get("evaluation_split", ""),
+                "excluded_calibration_samples": row.get("excluded_calibration_samples", ""),
                 "budget_status": budget,
                 "budget_note": budget_note,
                 "metric": row.get("metric", ""),
                 "recovery_mean": row.get("recovery_mean", ""),
                 "delta_mean": delta.get("delta_mean", ""),
                 "relative_drop": delta.get("relative_drop", ""),
+                "identity_success_overlap": delta.get("identity_success_overlap", ""),
+                "delta_on_identity_success_mean": delta.get("delta_on_identity_success_mean", ""),
                 "quality_psnr_mean": row.get("quality_psnr_mean", ""),
+                "quality_psnr_n": row.get("quality_psnr_n", ""),
                 "quality_lpips_mean": row.get("quality_lpips_mean", ""),
+                "quality_lpips_n": row.get("quality_lpips_n", ""),
                 "failure_rate": row.get("failure_rate", ""),
+                "unscorable_failures": row.get("unscorable_failures", ""),
                 "paper_caveats": caveats(row, budget),
             }
         )
@@ -137,16 +163,25 @@ def write_csv(path: Path, rows: list[dict[str, str]]) -> None:
         "factor",
         "tier",
         "provenance",
+        "baseline_provenance",
+        "attack_provenance",
         "complete",
+        "evaluation_split",
+        "excluded_calibration_samples",
         "budget_status",
         "budget_note",
         "metric",
         "recovery_mean",
         "delta_mean",
         "relative_drop",
+        "identity_success_overlap",
+        "delta_on_identity_success_mean",
         "quality_psnr_mean",
+        "quality_psnr_n",
         "quality_lpips_mean",
+        "quality_lpips_n",
         "failure_rate",
+        "unscorable_failures",
         "paper_caveats",
     ]
     with path.open("w", encoding="utf-8", newline="") as handle:

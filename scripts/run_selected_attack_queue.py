@@ -19,7 +19,14 @@ SCRIPTS_DIR = WORKSPACE_ROOT / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
-from selected_attack_matrix import SelectedAttack, default_count_for, selected_for_methods  # noqa: E402
+from selected_attack_matrix import (  # noqa: E402
+    SelectedAttack,
+    attack_provenance_for,
+    baseline_provenance_for,
+    default_count_for,
+    heldout_count_for,
+    selected_for_methods,
+)
 
 
 DEFAULT_ROOT = Path("/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527")
@@ -242,7 +249,11 @@ def write_matrix_manifest(root: Path, jobs: list[Job]) -> None:
             "label": job.spec.label,
             "metric": job.spec.metric,
             "provenance": job.spec.provenance,
+            "baseline_provenance": baseline_provenance_for(job.spec.method),
+            "attack_provenance": attack_provenance_for(job.spec),
             "count": job.count,
+            "paper_heldout_count": heldout_count_for(job.spec.method) if job.count == default_count_for(job.spec.method) else "",
+            "excluded_calibration_samples": 10 if job.count == default_count_for(job.spec.method) else "",
             "output_dir": str(root / job.name),
             "note": job.spec.note,
         }

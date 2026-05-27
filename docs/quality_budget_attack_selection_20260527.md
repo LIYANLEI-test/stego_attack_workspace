@@ -21,8 +21,9 @@ stego-vs-attacked LPIPS <= 0.10
 The thresholds are intentionally conservative for the paper comparison. PSNR
 30 dB is a common lower bound for mild visible distortion, while LPIPS 0.10 is
 a perceptual ceiling that rejects attacks that change image content too much.
-Both metrics are computed between the generated stego image and its attacked
-version, not against the original cover/secret. LPIPS uses the Alex backbone;
+Both metrics are required for parameter selection and are computed between the
+generated stego image and its attacked version, not against the original
+cover/secret. LPIPS uses the Alex backbone;
 tiny CIFAR-scale images are upsampled to 64x64 only for LPIPS ranking.
 
 ## Candidate Grid
@@ -42,6 +43,8 @@ payload methods, lower bit accuracy is stronger. For image payload methods,
 lower recovered-secret PSNR is stronger. If native recovery fails after the
 attacked image is saved, the sample is counted as complete payload-recovery
 failure while still using the saved stego/attacked images for PSNR and LPIPS.
+Failures without a saved measurable attacked pair are not scoreable attack
+outcomes and cannot qualify a setting for selection.
 
 Storage/PNG round trip is treated as a control rather than a destructive
 attack candidate, so it is not selected here.
@@ -116,9 +119,11 @@ attack candidate, so it is not selected here.
 - UnMarker is currently integrated only for GSD. It is an adapted attack-method
   candidate, not a hiding/steganography baseline and not a full paper
   reproduction.
-- These are 10-sample calibration choices. Final paper tables should rerun the
-  selected parameters at the agreed formal sample count and keep the same
-  quality budget fixed in advance.
+- These are 10-sample calibration choices on sample indices `0-9`. Final paper
+  tables rerun the selected parameters across the deterministic raw set but
+  exclude `0-9` from formal estimates to prevent parameter-selection leakage.
+  The fixed held-out counts are CRoSS `90`, GSD/MAS/GRDH/Pulsar `490`, and
+  MDDM pilot `40`.
 
 ## Artifacts
 

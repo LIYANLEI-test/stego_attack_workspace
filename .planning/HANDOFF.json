@@ -1,8 +1,8 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-27T08:47:26+08:00",
-  "phase": "1",
-  "phase_name": "Identity Baseline Finalization",
+  "timestamp": "2026-05-27T10:08:00+08:00",
+  "phase": "4",
+  "phase_name": "Evaluation And Analysis",
   "phase_dir": null,
   "plan": "selected-quality-budget-formal-queue",
   "task": "monitor-formal-selected-attacks",
@@ -21,15 +21,21 @@
       "status": "running",
       "pid": 8246,
       "root": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527",
-      "progress": "As of 2026-05-27 09:15 CST, 4/18 selected jobs complete and GSD CIFAR10 Regen-VAE has started automatically after CRoSS resize completed."
+      "progress": "As of 2026-05-27 13:07 CST, 5/18 selected jobs are complete; raw generated records are 2173/6550 and formal held-out records are 2083/6370, with no recorded failures."
     },
     {
       "id": "live_monitor",
       "name": "Add live queue monitor and report refresher",
       "status": "done",
       "script": "scripts/monitor_selected_attack_queue.py",
-      "pid": 11481,
+      "pid": 23026,
       "log": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log"
+    },
+    {
+      "id": "heldout_reporting",
+      "name": "Exclude calibration indices and harden failure/provenance reporting",
+      "status": "done",
+      "quick_task": ".planning/quick/20260527-held-out-formal-evaluation"
     }
   ],
   "remaining_tasks": [
@@ -76,10 +82,20 @@
     {
       "decision": "Treat Regen-VAE and UnMarker as adapted attack baselines, not full paper reproductions.",
       "rationale": "The workspace uses their attack primitives inside native reveal protocols rather than reproducing their complete original evaluation harnesses.",
-      "phase": "1"
+      "phase": "4"
+    },
+    {
+      "decision": "Exclude calibration sample indices 0-9 from formal paper estimates.",
+      "rationale": "Those samples selected attack parameters, so retaining them in formal tables would leak selection into evaluation.",
+      "phase": "4"
+    },
+    {
+      "decision": "Only score native recovery failures as zero when a saved measurable attacked image pair exists.",
+      "rationale": "Runner failures before an attacked artifact exists do not demonstrate attack effectiveness.",
+      "phase": "4"
     }
   ],
   "uncommitted_files": [],
-  "next_action": "Keep the selected queue running. Refresh live reports with scripts/monitor_selected_attack_queue.py, inspect logs if the queue exits nonzero, then commit and push final state.",
-  "context_notes": "Current formal root is /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527. Large generated CSV/images/logs stay under /data2 and must not be committed."
+  "next_action": "Keep the selected queue running. When it completes, require final LPIPS coverage and fixed-budget audit on held-out rows before using paper claims; inspect and repair any unscorable failures rather than treating them as attack success.",
+  "context_notes": "Current formal root is /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527. Raw output retains calibration records, but formal reports exclude sample indices 0-9. Main-table candidates are CRoSS, GSD CIFAR10, MAS/GRDH, and Pulsar; MDDM is appendix-only. Large generated CSV/images/logs stay under /data2 and must not be committed."
 }

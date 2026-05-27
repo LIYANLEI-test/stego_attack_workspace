@@ -2,24 +2,24 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-05-25)
+See: .planning/PROJECT.md (updated 2026-05-27)
 
 **Core value:** Produce reproducible, paper-aligned attack experiments that preserve native baseline semantics and honest provenance labels.
 **Current focus:** Paper-grade selected-attack framework and formal quality-budget sweeps for runnable non-RGS methods.
 
 ## Current Position
 
-Phase: 1 of 5 (Identity Baseline Finalization)
-Plan: 1 of 3 in current phase
+Phase: 4 of 5 (Evaluation And Analysis)
+Plan: selected held-out formal queue and paper-readiness audit
 Status: Formal selected-attack queue running under `/data2`
-Last activity: 2026-05-27 08:47 CST - Added selected queue monitor, refreshed live reports, and updated handoff state while the formal queue continued running.
+Last activity: 2026-05-27 13:07 CST - Separated calibration from held-out reporting, hardened failure scoring and provenance fields, and refreshed live reports while the formal queue continued running.
 
-Progress: [=---------] 5%
+Progress: [======----] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
+- Total quick tasks completed: 10
 - Average duration: N/A
 - Total execution time: N/A
 
@@ -27,7 +27,10 @@ Progress: [=---------] 5%
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. Identity Baseline Finalization | 0/3 | N/A | N/A |
+| 1. Identity Baseline Finalization | 3/3 | Complete | N/A |
+| 2. Attack Protocol Design | 3/3 | Complete | N/A |
+| 3. Attack Runner Implementation | 4/4 | Complete | N/A |
+| 4. Evaluation And Analysis | 1/3 | Running | N/A |
 
 **Recent Trend:**
 - Last 5 plans: N/A
@@ -49,6 +52,9 @@ Recent decisions affecting current work:
 - Treat `XuandongZhao/WatermarkAttacker` Regen-VAE as a stronger adapted attack-method candidate, not a hiding/steganography baseline.
 - Treat `and-mill/semantic-forgery` as related semantic-watermark attack work, not a current hidden-payload destruction baseline.
 - For fair attack comparison, select attack parameters under a fixed stego-vs-attacked image-quality budget: PSNR >= 30 dB and LPIPS <= 0.10. Within budget, choose the strongest payload-destruction setting per method/attack.
+- Treat calibration indices `0-9` as parameter-selection-only; formal summaries use held-out indices `10+`.
+- Score failed native recovery as zero only after the measurable attacked image exists; keep other runner failures unscorable.
+- Record baseline provenance independently of adapted attack provenance, and report identity-success-conditioned deltas where native identity failures exist.
 
 ### Current Identity Snapshot
 
@@ -263,6 +269,7 @@ Selected parameters:
 Caveats:
 
 - These are 10-sample calibration choices, not final paper-scale tables.
+- These calibration samples are excluded from formal summary statistics by default.
 - RGS remains excluded from attacks for runtime reasons.
 - Diffusion-Stego remains excluded because the current workspace path is projection-only.
 - MDDM remains `native_third_party`.
@@ -346,13 +353,50 @@ driver pid 8246 still running
 monitor pid 11481 still running
 ```
 
-Formal queue size:
+Queue progress as of 2026-05-27 10:12 CST:
+
+```text
+raw generated records: 951/6550
+formal held-out records: 871/6370
+completed jobs: 4/18, all with 0 failures
+cross_resize_1_5_100: formal 90/90 complete
+cross_jpeg_50_100: formal 90/90 complete
+cross_mblur_3_100: formal 90/90 complete
+cross_gblur_3_100: formal 90/90 complete
+cross_regen_vae_5_100, GSD resize/JPEG/Regen-VAE: running with 0 failures
+driver pid 8246 and monitor pid 23026 still running
+```
+
+Queue progress as of 2026-05-27 13:07 CST:
+
+```text
+raw generated records: 2173/6550
+formal held-out records: 2083/6370
+completed jobs: 5/18, all with 0 failures
+cross_resize_1_5_100: formal 90/90 complete
+cross_jpeg_50_100: formal 90/90 complete
+cross_mblur_3_100: formal 90/90 complete
+cross_gblur_3_100: formal 90/90 complete
+cross_regen_vae_5_100: formal 90/90 complete
+GSD resize/JPEG/Regen-VAE/UnMarker: running with 0 failures
+driver pid 8246 and monitor pid 23026 still running
+```
+
+Raw queue generation size:
 
 - CRoSS: 5 selected attacks x 100 samples.
 - GSD CIFAR10: 4 selected attacks x 500 samples.
 - MAS/GRDH: 3 selected attacks x 500 samples.
 - MDDM 128-byte pilot: 1 selected attack x 50 samples.
 - Pulsar: 5 selected attacks x 500 samples.
+
+Formal held-out table size after excluding calibration indices `0-9`:
+
+- CRoSS: 5 selected attacks x 90 samples.
+- GSD CIFAR10: 4 selected attacks x 490 samples.
+- MAS/GRDH: 3 selected attacks x 490 samples.
+- MDDM 128-byte pilot: 1 selected attack x 40 samples, appendix only.
+- Pulsar: 5 selected attacks x 490 samples.
 
 Launch command:
 
@@ -391,6 +435,10 @@ Reporting scripts now provide:
 - Experiment manifest capture for git head, GPU inventory, budget, and script entry points.
 - Live queue monitor that refreshes live reports and writes final reports when all selected jobs complete.
 - Paper-readiness audit that flags incomplete rows, adapted attacks, pilot rows, failure rates, and missing LPIPS evidence.
+- Held-out reporting that excludes calibration indices `0-9` by default, with
+  `--include-calibration` available only for diagnostic reconstruction.
+- Strict scoring of reveal failures only when a saved measurable attacked pair
+  exists, plus unscorable-failure blocking and identity-success-conditioned delta fields.
 
 Live generated reporting artifacts:
 
@@ -427,6 +475,7 @@ Paper framework decisions:
 | 2026-05-27 | Semantic Forgery suitability check | `and-mill/semantic-forgery` classified as related semantic-watermark attack work, not a current hidden-payload destruction baseline |
 | 2026-05-27 | Quality-budget attack selection | Selected 10-sample fair-budget attack parameters under PSNR >= 30 dB and LPIPS <= 0.10 for CRoSS, GSD, MAS/GRDH, MDDM pilot, and Pulsar |
 | 2026-05-27 | Paper framework and selected formal queue | Added selected attack matrix, formal queue, summary script with CI columns, and paper claim-boundary documentation |
+| 2026-05-27 | Held-out formal evaluation hardening | Excluded calibration samples from paper estimates, enforced quality/failure coverage, split main/appendix reports, and added reporting regression tests |
 
 ### Pending Todos
 
@@ -446,6 +495,6 @@ None in `.planning/todos/pending/` yet.
 
 ## Session Continuity
 
-Last session: 2026-05-26 CST
-Stopped at: Selected quality-budget formal queue running under `/data2`; monitor and live report refresh are available. Next action is to keep monitoring, inspect logs on failure, and write final reports when all selected jobs complete.
+Last session: 2026-05-27 CST
+Stopped at: Selected quality-budget formal queue running under `/data2`; formal summaries now use held-out samples and distinguish scorable from unscorable failures. Next action is to keep monitoring, run final LPIPS/audit outputs at completion, and exclude any row that fails the fixed quality budget without retuning.
 Resume file: `.planning/.continue-here.md`

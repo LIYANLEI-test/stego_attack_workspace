@@ -7,35 +7,35 @@
 
 ### Baseline Provenance
 
-- [ ] **BASE-01**: Each baseline runner calls the native/public repository implementation or is explicitly labeled as third-party/reference/pilot.
-- [ ] **BASE-02**: Local adaptations are documented and limited to path, cache, checkpoint, import, logging, and runner plumbing unless marked as a non-paper variant.
-- [ ] **BASE-03**: Payload capacity and shape follow each method's native/paper path rather than a cross-method artificial payload.
-- [ ] **BASE-04**: Docs identify which outputs are formal identity records, pilot records, smoke tests, or projection-only checks.
+- [x] **BASE-01**: Each baseline runner calls the native/public repository implementation or is explicitly labeled as third-party/reference/pilot.
+- [x] **BASE-02**: Local adaptations are documented and limited to path, cache, checkpoint, import, logging, and runner plumbing unless marked as a non-paper variant.
+- [x] **BASE-03**: Payload capacity and shape follow each method's native/paper path rather than a cross-method artificial payload.
+- [x] **BASE-04**: Docs identify which outputs are formal identity records, pilot records, smoke tests, or projection-only checks.
 
 ### Identity Baselines
 
-- [ ] **ID-01**: Pulsar identity status records all 500 samples, including native failures, without claiming failed samples as successful recovery.
-- [ ] **ID-02**: CRoSS identity status records 100 fixed FFHQ image-payload samples with recovery PSNR/SSIM and exact-match metrics.
-- [ ] **ID-03**: RGS identity status records 100 fixed FFHQ image-payload samples with indice accuracy, PSNR/SSIM, and exact-match metrics.
-- [ ] **ID-04**: GSD CIFAR10 identity status records 500 method-native bit-payload samples with bit accuracy and exact-match metrics.
-- [ ] **ID-05**: MAS/GRDH identity status records 500 method-native bit-payload samples with bit accuracy and exact-match metrics.
-- [ ] **ID-06**: Diffusion-Stego identity status records MN, MB, MC, and Multi-bits projection checks as projection-only, not full image recovery.
-- [ ] **ID-07**: MDDM status remains a `native_third_party` capacity/pilot result until an exact formal path is established.
-- [ ] **ID-08**: A concise identity summary document points to result roots, logs, commands, and method-specific caveats without committing large data.
+- [x] **ID-01**: Pulsar identity status records all 500 samples, including native failures, without claiming failed samples as successful recovery.
+- [x] **ID-02**: CRoSS identity status records 100 fixed FFHQ image-payload samples with recovery PSNR/SSIM and exact-match metrics.
+- [x] **ID-03**: RGS identity status records 100 fixed FFHQ image-payload samples with indice accuracy, PSNR/SSIM, and exact-match metrics.
+- [x] **ID-04**: GSD CIFAR10 identity status records 500 method-native bit-payload samples with bit accuracy and exact-match metrics.
+- [x] **ID-05**: MAS/GRDH identity status records 500 method-native bit-payload samples with bit accuracy and exact-match metrics.
+- [x] **ID-06**: Diffusion-Stego identity status records MN, MB, MC, and Multi-bits projection checks as projection-only, not full image recovery.
+- [x] **ID-07**: MDDM status remains a `native_third_party` capacity/pilot result until an exact formal path is established.
+- [x] **ID-08**: A concise identity summary document points to result roots, logs, commands, and method-specific caveats without committing large data.
 
 ### Attack Protocol
 
-- [ ] **ATT-01**: Attack layers are defined separately from baseline generation and recovery logic.
-- [ ] **ATT-02**: Each attack specifies target artifact type, allowed perturbation budget, image-quality metrics, and expected message-destruction metric.
-- [ ] **ATT-03**: Attack evaluation compares attacked recovery against the corresponding identity baseline for the same sample index and method.
-- [ ] **ATT-04**: Method-specific constraints are documented where a baseline exposes image payloads, bit payloads, latent payloads, ECC, or native failure modes.
+- [x] **ATT-01**: Attack layers are defined separately from baseline generation and recovery logic.
+- [x] **ATT-02**: Each attack specifies target artifact type, allowed perturbation budget, image-quality metrics, and expected message-destruction metric.
+- [x] **ATT-03**: Attack evaluation compares attacked recovery against the corresponding identity baseline for the same sample index and method.
+- [x] **ATT-04**: Method-specific constraints are documented where a baseline exposes image payloads, bit payloads, latent payloads, ECC, or native failure modes.
 
 ### Attack Runners
 
-- [ ] **RUN-01**: Attack runners are resumable and skip already completed sample/method/attack combinations.
-- [ ] **RUN-02**: Attack runners write structured manifests, per-sample CSV rows, and failure CSV rows.
-- [ ] **RUN-03**: Attack runners never silently rewrite identity results or native baseline code.
-- [ ] **RUN-04**: Attack runners support smoke-scale execution before long sweeps.
+- [x] **RUN-01**: Attack runners are resumable and skip already completed sample/method/attack combinations.
+- [x] **RUN-02**: Attack runners write structured manifests, per-sample CSV rows, and failure CSV rows.
+- [x] **RUN-03**: Attack runners never silently rewrite identity results or native baseline code.
+- [x] **RUN-04**: Attack runners support smoke-scale execution before long sweeps.
 
 ### Evaluation And Reporting
 
@@ -46,7 +46,7 @@
 
 ### Operations
 
-- [ ] **OPS-01**: Large data, generated artifacts, model weights, and logs remain outside git under `/data2/liyanlei/...`.
+- [x] **OPS-01**: Large data, generated artifacts, model weights, and logs remain outside git under `/data2/liyanlei/...`.
 - [ ] **OPS-02**: Code, configs, docs, summaries, and `.planning/` state are committed and pushed after task updates.
 - [ ] **OPS-03**: Future work starts by reading `.planning/STATE.md`, `.planning/PROJECT.md`, and the relevant method docs.
 - [ ] **OPS-04**: Broken GSD SDK/tooling is tracked as an operations issue but does not block maintaining `.planning/` state.
@@ -72,31 +72,31 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BASE-01 | Phase 1 | In Progress |
-| BASE-02 | Phase 1 | In Progress |
-| BASE-03 | Phase 1 | In Progress |
-| BASE-04 | Phase 1 | In Progress |
+| BASE-01 | Phase 1 | Complete |
+| BASE-02 | Phase 1 | Complete |
+| BASE-03 | Phase 1 | Complete |
+| BASE-04 | Phase 1 | Complete |
 | ID-01 | Phase 1 | Complete |
 | ID-02 | Phase 1 | Complete |
-| ID-03 | Phase 1 | In Progress |
+| ID-03 | Phase 1 | Complete |
 | ID-04 | Phase 1 | Complete |
 | ID-05 | Phase 1 | Complete |
 | ID-06 | Phase 1 | Complete |
 | ID-07 | Phase 1 | Complete |
-| ID-08 | Phase 1 | Pending |
-| ATT-01 | Phase 2 | Pending |
-| ATT-02 | Phase 2 | Pending |
-| ATT-03 | Phase 2 | Pending |
-| ATT-04 | Phase 2 | Pending |
-| RUN-01 | Phase 3 | Pending |
-| RUN-02 | Phase 3 | Pending |
-| RUN-03 | Phase 3 | Pending |
-| RUN-04 | Phase 3 | Pending |
-| EVAL-01 | Phase 4 | Pending |
-| EVAL-02 | Phase 4 | Pending |
-| EVAL-03 | Phase 4 | Pending |
+| ID-08 | Phase 1 | Complete |
+| ATT-01 | Phase 2 | Complete |
+| ATT-02 | Phase 2 | Complete |
+| ATT-03 | Phase 2 | Complete |
+| ATT-04 | Phase 2 | Complete |
+| RUN-01 | Phase 3 | Complete |
+| RUN-02 | Phase 3 | Complete |
+| RUN-03 | Phase 3 | Complete |
+| RUN-04 | Phase 3 | Complete |
+| EVAL-01 | Phase 4 | In Progress |
+| EVAL-02 | Phase 4 | In Progress |
+| EVAL-03 | Phase 4 | In Progress |
 | EVAL-04 | Phase 4 | Pending |
-| OPS-01 | Phase 5 | Pending |
+| OPS-01 | Phase 5 | Complete |
 | OPS-02 | Phase 5 | In Progress |
 | OPS-03 | Phase 5 | In Progress |
 | OPS-04 | Phase 5 | Pending |
@@ -108,4 +108,4 @@
 
 ---
 *Requirements defined: 2026-05-25*
-*Last updated: 2026-05-25 after manual GSD initialization*
+*Last updated: 2026-05-27 during held-out selected-attack evaluation*

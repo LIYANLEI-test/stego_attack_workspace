@@ -24,7 +24,12 @@ SCRIPTS_DIR = WORKSPACE_ROOT / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
-from selected_attack_matrix import default_count_for, selected_for_methods  # noqa: E402
+from selected_attack_matrix import (  # noqa: E402
+    CALIBRATION_SAMPLE_COUNT,
+    default_count_for,
+    heldout_count_for,
+    selected_for_methods,
+)
 
 
 DEFAULT_ROOT = Path("/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527")
@@ -53,9 +58,30 @@ def read_count(path: Path) -> int:
         return sum(1 for _ in csv.DictReader(handle))
 
 
+def read_heldout_count(path: Path) -> int:
+    if not path.exists():
+        return 0
+    count = 0
+    with path.open("r", encoding="utf-8", newline="") as handle:
+        for row in csv.DictReader(handle):
+            try:
+                sample_index = int(row.get("sample_index", ""))
+            except (TypeError, ValueError):
+                continue
+            if sample_index >= CALIBRATION_SAMPLE_COUNT:
+                count += 1
+    return count
+
+
 def result_counts(out_dir: Path) -> tuple[int, int, int]:
     rows = read_count(out_dir / "identity_results.csv")
     failures = read_count(out_dir / "identity_failures.csv")
+    return rows, failures, rows + failures
+
+
+def heldout_result_counts(out_dir: Path) -> tuple[int, int, int]:
+    rows = read_heldout_count(out_dir / "identity_results.csv")
+    failures = read_heldout_count(out_dir / "identity_failures.csv")
     return rows, failures, rows + failures
 
 
@@ -202,28 +228,40 @@ def refresh_reports(root: Path, final: bool) -> list[dict[str, object]]:
 
 def build_snapshot(root: Path, queue_pid: int | None, report_results: list[dict[str, object]]) -> dict[str, object]:
     jobs = []
-    total_done = 0
-    total_target = 0
+    raw_done = 0
+    raw_target_total = 0
+    formal_done = 0
+    formal_target_total = 0
     for spec in selected_for_methods(None):
-        target = default_count_for(spec.method)
-        out_dir = root / f"{spec.method}_{spec.name_part}_{target}"
+        raw_target = default_count_for(spec.method)
+        formal_target = heldout_count_for(spec.method)
+        out_dir = root / f"{spec.method}_{spec.name_part}_{raw_target}"
         rows, failures, total = result_counts(out_dir)
+        formal_rows, formal_failures, formal_total = heldout_result_counts(out_dir)
         jobs.append(
             {
                 "name": out_dir.name,
                 "method": spec.method,
                 "attack": spec.attack,
                 "factor": spec.factor,
-                "target": target,
+                "target": raw_target,
+                "raw_target": raw_target,
                 "rows": rows,
                 "failures": failures,
                 "total": total,
-                "complete": total >= target,
+                "complete": total >= raw_target,
+                "formal_target": formal_target,
+                "formal_rows": formal_rows,
+                "formal_failures": formal_failures,
+                "formal_total": formal_total,
+                "formal_complete": formal_total >= formal_target,
                 "output_dir": str(out_dir),
             }
         )
-        total_done += min(total, target)
-        total_target += target
+        raw_done += min(total, raw_target)
+        raw_target_total += raw_target
+        formal_done += min(formal_total, formal_target)
+        formal_target_total += formal_target
 
     processes = matching_processes(root)
     all_complete = bool(jobs) and all(job["complete"] for job in jobs)
@@ -235,9 +273,15 @@ def build_snapshot(root: Path, queue_pid: int | None, report_results: list[dict[
         "all_complete": all_complete,
         "complete_jobs": sum(1 for job in jobs if job["complete"]),
         "total_jobs": len(jobs),
-        "total_done": total_done,
-        "total_target": total_target,
-        "progress_fraction": (total_done / total_target) if total_target else 0.0,
+        "total_done": raw_done,
+        "total_target": raw_target_total,
+        "progress_fraction": (raw_done / raw_target_total) if raw_target_total else 0.0,
+        "raw_done": raw_done,
+        "raw_target": raw_target_total,
+        "formal_done": formal_done,
+        "formal_target": formal_target_total,
+        "formal_progress_fraction": (formal_done / formal_target_total) if formal_target_total else 0.0,
+        "calibration_sample_indices": "0-9",
         "processes": processes,
         "jobs": jobs,
         "report_results": report_results,
@@ -255,14 +299,17 @@ def write_snapshot(root: Path, snapshot: dict[str, object]) -> None:
         f"- Updated UTC: `{snapshot['created_at_utc']}`",
         f"- Queue alive: `{snapshot['queue_alive']}`",
         f"- Jobs complete: `{snapshot['complete_jobs']}/{snapshot['total_jobs']}`",
-        f"- Records: `{snapshot['total_done']}/{snapshot['total_target']}`",
+        f"- Raw generated records: `{snapshot['raw_done']}/{snapshot['raw_target']}`",
+        f"- Formal held-out records: `{snapshot['formal_done']}/{snapshot['formal_target']}`",
+        "- Formal rows exclude calibration sample indices `0-9`.",
         "",
-        "| Job | Done | Rows | Failures |",
-        "|-----|------|------|----------|",
+        "| Job | Raw Done | Raw Failures | Formal Done | Formal Failures |",
+        "|-----|----------|--------------|-------------|-----------------|",
     ]
     for job in snapshot["jobs"]:
         lines.append(
-            f"| {job['name']} | {job['total']}/{job['target']} | {job['rows']} | {job['failures']} |"
+            f"| {job['name']} | {job['total']}/{job['raw_target']} | {job['failures']} | "
+            f"{job['formal_total']}/{job['formal_target']} | {job['formal_failures']} |"
         )
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -283,7 +330,8 @@ def main() -> int:
         print(
             "[monitor] "
             f"{snapshot['created_at_utc']} jobs={snapshot['complete_jobs']}/{snapshot['total_jobs']} "
-            f"records={snapshot['total_done']}/{snapshot['total_target']} "
+            f"raw_records={snapshot['raw_done']}/{snapshot['raw_target']} "
+            f"formal_records={snapshot['formal_done']}/{snapshot['formal_target']} "
             f"queue_alive={snapshot['queue_alive']}",
             flush=True,
         )

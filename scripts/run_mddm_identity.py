@@ -97,6 +97,11 @@ def append_failure(path: Path, row: dict[str, object]) -> None:
     fieldnames = [
         "method",
         "sample_index",
+        "attack_kind",
+        "resize_factor",
+        "attack_factor",
+        "image_path",
+        "attacked_path",
         "stage",
         "error_type",
         "error_summary",
@@ -105,6 +110,18 @@ def append_failure(path: Path, row: dict[str, object]) -> None:
         "created_at_utc",
     ]
     exists = path.exists()
+    if exists:
+        with path.open("r", encoding="utf-8", newline="") as handle:
+            existing_reader = csv.DictReader(handle)
+            existing_names = existing_reader.fieldnames or []
+            if existing_names != fieldnames:
+                existing_rows = list(existing_reader)
+                with path.open("w", encoding="utf-8", newline="") as rewrite:
+                    writer = csv.DictWriter(rewrite, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(
+                        {key: old_row.get(key, "") for key in fieldnames} for old_row in existing_rows
+                    )
     with path.open("a", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)
         if not exists:

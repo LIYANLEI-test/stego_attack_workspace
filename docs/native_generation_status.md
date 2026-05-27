@@ -53,6 +53,22 @@ pulsar/identity_results.csv
   461 successful samples, all exact; 39 native failures recorded in identity_failures.csv.
   Total recorded: 500/500 sample indices.
 
+cross/identity_results.csv
+  100/100 image-payload samples; mean recovered-secret PSNR 21.955770 dB.
+
+rgs/identity_results.csv
+  100/100 image-payload samples with 0 failures; mean recovered-secret PSNR 23.316454 dB.
+
+gsd_cifar10/identity_results.csv
+  500/500 bit-payload samples; mean bit accuracy 0.874217.
+
+mas_grdh/identity_results.csv
+  500/500 bit-payload samples; mean bit accuracy 0.958325.
+
+mddm_128_pilot/identity_results.csv
+  50/50 records; mean bit accuracy 0.999180.
+  This remains a native_third_party pilot/appendix result.
+
 diffusion_stego_mn_projection/identity_results.csv
 diffusion_stego_mb_projection/identity_results.csv
 diffusion_stego_mc_projection/identity_results.csv
@@ -61,16 +77,7 @@ diffusion_stego_multi_bits_projection/identity_results.csv
   These are reference Projection encode/decode checks, not full SD image generation/recovery runs.
 ```
 
-Active jobs started on 2026-05-24:
-
-```text
-cross       100 images, 50 DDIM steps, official demo path
-rgs         100 images, 50 steps, official hide_and_reveal.py with identity_only
-gsd_cifar10 500 messages, 1000 timesteps, native sample_reverse_dct path
-mas_grdh    500 messages, DPM steps 20, scale 5.0, identity attack layer
-```
-
-Logs and PID files:
+Identity logs and retained PID-file locations:
 
 ```text
 /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/cross_identity.log
@@ -87,7 +94,7 @@ MDDM remains a third-party pilot path. Earlier 2048-byte and 256-byte runs were
 not reliably exact, so do not treat full-size MDDM identity as complete without
 a larger successful pilot and a clear `native_third_party` label.
 
-Active MDDM pilot:
+Completed MDDM pilot:
 
 ```text
 mddm_128_pilot 50 messages, 128 printable ASCII bytes, steps 20, guidance scale 1.0
@@ -95,9 +102,9 @@ log: /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/lo
 pid: /data2/liyanlei/stego_attack_data/identity_runs/native_identity_20260522/logs/mddm_128_pilot.pid
 ```
 
-This pilot is not a formal identity success criterion. Early samples include
-high-accuracy non-exact recoveries, so MDDM needs further capacity/parameter
-work before any exact identity claim.
+This pilot is not a formal official identity baseline. It includes
+high-accuracy non-exact recoveries, so MDDM stays outside primary claims unless
+an official implementation is selected and audited separately.
 
 ## Verified Smokes
 

@@ -68,6 +68,16 @@ def append_csv_row(csv_path: Path, row: dict[str, object], fieldnames: list[str]
     csv_path.parent.mkdir(parents=True, exist_ok=True)
     exists = csv_path.exists()
     names = fieldnames or list(row.keys())
+    if exists and fieldnames is not None:
+        with csv_path.open("r", encoding="utf-8", newline="") as handle:
+            existing_reader = csv.DictReader(handle)
+            existing_names = existing_reader.fieldnames or []
+            if existing_names != names:
+                existing_rows = list(existing_reader)
+                with csv_path.open("w", encoding="utf-8", newline="") as rewrite:
+                    writer = csv.DictWriter(rewrite, fieldnames=names)
+                    writer.writeheader()
+                    writer.writerows({key: old_row.get(key, "") for key in names} for old_row in existing_rows)
     with csv_path.open("a", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=names)
         if not exists:

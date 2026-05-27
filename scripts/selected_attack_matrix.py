@@ -21,6 +21,18 @@ DEFAULT_FORMAL_COUNTS = {
     "pulsar": 500,
 }
 
+BASELINE_PROVENANCE = {
+    "cross": "native_official",
+    "gsd_cifar10": "native_official",
+    "mas_grdh": "native_official",
+    "mddm_128_pilot": "native_third_party",
+    "pulsar": "native_official",
+}
+
+# Attack parameters were selected on these sample IDs in the calibration grid.
+# Formal paper summaries exclude them to avoid selection/test leakage.
+CALIBRATION_SAMPLE_COUNT = 10
+
 
 @dataclass(frozen=True)
 class SelectedAttack:
@@ -130,3 +142,25 @@ def default_count_for(method: str) -> int:
         return DEFAULT_FORMAL_COUNTS[method]
     except KeyError as exc:
         raise ValueError(f"unsupported method for selected attack matrix: {method}") from exc
+
+
+def heldout_count_for(method: str) -> int:
+    count = default_count_for(method) - CALIBRATION_SAMPLE_COUNT
+    if count <= 0:
+        raise ValueError(f"no held-out samples remain for method: {method}")
+    return count
+
+
+def baseline_provenance_for(method: str) -> str:
+    try:
+        return BASELINE_PROVENANCE[method]
+    except KeyError as exc:
+        raise ValueError(f"unsupported method for selected attack matrix: {method}") from exc
+
+
+def attack_provenance_for(spec: SelectedAttack) -> str:
+    if spec.attack == "regen_vae":
+        return "adapted_watermarkattacker_regen_vae"
+    if spec.attack == "unmarker":
+        return "adapted_unmarker_smoke"
+    return "common_image_transform"
