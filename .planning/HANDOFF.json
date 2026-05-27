@@ -1,11 +1,11 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-28T01:47:00+08:00",
+  "timestamp": "2026-05-28T02:28:00+08:00",
   "phase": "4",
   "phase_name": "Evaluation And Analysis",
   "phase_dir": null,
   "plan": "quality-budget-attack-smoke-validation",
-  "task": "pulsar-10-precision-controls",
+  "task": "pulsar-paper-resize-jpeg-calibration",
   "total_tasks": 10,
   "status": "smoke_complete_full_run_gated",
   "completed_tasks": [
@@ -37,6 +37,13 @@
       "status": "done",
       "root": "/data2/liyanlei/stego_attack_data/attack_runs/pulsar_10_precision_controls_20260528",
       "progress": "Native uint16 storage succeeded 10/10; uint8 storage failed 10/10; uint16-preserving resize 1.25, median blur 3, and Gaussian blur 3 each failed 10/10 positive-payload samples."
+    },
+    {
+      "id": "pulsar_paper_resize_jpeg_calibration",
+      "name": "Pulsar paper-style 10-sample resize/JPEG calibration",
+      "status": "done",
+      "root": "/data2/liyanlei/stego_attack_data/attack_runs/pulsar_paper_baseline_10_20260528",
+      "progress": "Raw Pulsar with church-256, DDIM50, E*64 key, 8192-byte payload, and BER>0.48 failure reproduced the ADS paper's basic regime: identity BER 0.284637, resize224 failure 6/10, JPEG Q90 10/10, JPEG Q70 10/10."
     }
   ],
   "remaining_tasks": [
@@ -90,15 +97,20 @@
       "decision": "Report Pulsar precision controls by native channel and positive-payload recovery.",
       "rationale": "Pulsar is recoverable under native 16-bit storage but fails under 8-bit quantization and under mild 16-bit-preserving image-domain perturbations in the 10-sample control.",
       "phase": "4"
+    },
+    {
+      "decision": "Separate ADS-paper raw Pulsar BER calibration from the workspace region/ECC Pulsar identity protocol.",
+      "rationale": "The ADS paper uses raw generate/reveal, church-256, E*64 key, 8192-byte payload, and BER<=0.48 success, while the workspace formal runner uses region/ECC capacity payloads and exact positive-payload recovery.",
+      "phase": "4"
     }
   ],
   "uncommitted_files": [
     ".planning/HANDOFF.json",
     ".planning/.continue-here.md",
     ".planning/STATE.md",
-    ".planning/quick/20260528-pulsar-precision-controls/",
-    "scripts/run_pulsar_identity.py"
+    ".planning/quick/20260528-pulsar-paper-resize-jpeg-calibration/",
+    "scripts/run_pulsar_paper_baseline.py"
   ],
-  "next_action": "Do not restart any selected formal queue. Use the Pulsar 10-sample controls to write the paper wording/fair main-matrix design, then continue only 10-sample smoke validations for other candidate attacks unless the user explicitly approves a formal run.",
-  "context_notes": "All matching selected_quality_budget_20260527 queue, monitor, and runner processes were killed at approximately 2026-05-27 13:12 CST. The Pulsar precision-control runner adds --preserve-sample-dtype-attack so resize/blur can be applied on saved PNG bit depth instead of the old RGB uint8 attack path. No full-scale queue should be launched or resumed without explicit user approval."
+  "next_action": "Do not restart any selected formal queue. Use the paper-style Pulsar calibration to explain that the ADS paper is comparable only under the raw BER protocol, then continue only 10-sample smoke validations unless the user explicitly approves a formal run.",
+  "context_notes": "All matching selected_quality_budget_20260527 queue, monitor, and runner processes were killed at approximately 2026-05-27 13:12 CST. The Pulsar precision-control runner adds --preserve-sample-dtype-attack for native-bit-depth attacks. The paper-style runner scripts/run_pulsar_paper_baseline.py uses official raw Pulsar generate/reveal and matches the ADS paper's resize/JPEG behavior on 10 samples. No full-scale queue should be launched or resumed without explicit user approval."
 }

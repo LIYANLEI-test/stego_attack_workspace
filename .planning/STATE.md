@@ -495,6 +495,7 @@ Paper framework decisions:
 | 2026-05-27 | Held-out formal evaluation hardening | Excluded calibration samples from paper estimates, enforced quality/failure coverage, split main/appendix reports, and added reporting regression tests |
 | 2026-05-27 | Pulsar 100-sample selected attack smoke | Pulsar-only 100 samples per selected attack completed; each attack had 2 zero-capacity result rows and 98 positive-capacity native reveal failures, with PSNR >= 40.165 and LPIPS <= 0.060507 |
 | 2026-05-28 | Pulsar precision controls | 10-sample controls show native uint16 storage succeeds 10/10, uint8 storage fails 10/10, and uint16-preserving resize/median/Gaussian blur each fail 10/10 positive-payload samples |
+| 2026-05-28 | Pulsar paper resize/JPEG calibration | Paper-style raw Pulsar 10-sample check on church-256, DDIM50, E*64 key, 8192-byte payload: identity BER 0.284637, resize224 failure 6/10, JPEG Q90 10/10, JPEG Q70 10/10 under BER>0.48 |
 
 ### Pending Todos
 
@@ -515,6 +516,6 @@ None in `.planning/todos/pending/` yet.
 
 ## Session Continuity
 
-Last session: 2026-05-27 CST
-Stopped at: Pulsar 10-sample precision controls completed. Next action is to present Pulsar as native-16-bit-storage recoverable but highly fragile to both 8-bit quantization and mild 16-bit-preserving image perturbations; keep multi-method full-scale execution gated behind explicit user approval.
+Last session: 2026-05-28 CST
+Stopped at: Pulsar paper-style 10-sample resize/JPEG calibration completed. The raw Pulsar BER path reproduces the ADS paper's basic behavior, while the workspace region/ECC Pulsar runner is a different protocol and should be described separately. Full-scale execution remains gated behind explicit user approval.
 Resume file: `.planning/.continue-here.md`
