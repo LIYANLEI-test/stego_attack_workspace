@@ -131,7 +131,9 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
 The monitor does not launch or stop attack jobs. It refreshes live summary,
 delta, Markdown/LaTeX tables, live manifest, and
 `queue_progress_snapshot.{json,md}`. If all selected jobs complete, it writes
-the final non-`_live` reports.
+the final non-`_live` reports. For a new queue, replace `--queue-pid` with the
+new driver PID or omit it to let the monitor detect matching queue processes by
+experiment root.
 
 Experiment manifest:
 
