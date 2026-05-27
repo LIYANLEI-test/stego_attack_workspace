@@ -493,6 +493,7 @@ Paper framework decisions:
 | 2026-05-27 | Quality-budget attack selection | Selected 10-sample fair-budget attack parameters under PSNR >= 30 dB and LPIPS <= 0.10 for CRoSS, GSD, MAS/GRDH, MDDM pilot, and Pulsar |
 | 2026-05-27 | Paper framework and selected formal queue | Added selected attack matrix, formal queue, summary script with CI columns, and paper claim-boundary documentation |
 | 2026-05-27 | Held-out formal evaluation hardening | Excluded calibration samples from paper estimates, enforced quality/failure coverage, split main/appendix reports, and added reporting regression tests |
+| 2026-05-27 | Pulsar 100-sample selected attack smoke | Pulsar-only 100 samples per selected attack completed; each attack had 2 zero-capacity result rows and 98 positive-capacity native reveal failures, with PSNR >= 40.165 and LPIPS <= 0.060507 |
 
 ### Pending Todos
 
@@ -514,5 +515,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-27 CST
-Stopped at: Selected quality-budget formal queue was killed after the user clarified only 10-sample testing was intended. Next action is to summarize smoke/quality-budget evidence and keep full-scale execution gated behind explicit user approval.
+Stopped at: Pulsar-only 100-sample selected attack smoke completed and confirmed the 10-sample pattern. Next action is to decide how to present Pulsar using positive-capacity failure rate, not raw zero-capacity result rows, and keep multi-method full-scale execution gated behind explicit user approval.
 Resume file: `.planning/.continue-here.md`
