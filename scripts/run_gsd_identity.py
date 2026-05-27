@@ -218,6 +218,8 @@ def main() -> None:
             continue
         started = time.perf_counter()
         stage = "init"
+        image_path = ""
+        attacked_path = ""
         try:
             stage = "payload"
             payload_bits = bits_from_payload_row(messages[sample_index])
@@ -230,8 +232,6 @@ def main() -> None:
             clean_recon = official_dct_decode(z_coeff)
             clean = bit_metrics(payload_bits, clean_recon.reshape(-1).tolist())
 
-            image_path = ""
-            attacked_path = ""
             inversion: dict[str, object] | None = None
             if runner is not None and model is not None:
                 stage = "sample_image"
@@ -342,6 +342,11 @@ def main() -> None:
                     "method": "gsd",
                     "variant": method.replace("gsd_", ""),
                     "sample_index": sample_index,
+                    "attack_kind": args.attack_kind,
+                    "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "image_path": image_path,
+                    "attacked_path": attacked_path,
                     "stage": stage,
                     "error_type": type(exc).__name__,
                     "error_summary": summarize_exception(exc),

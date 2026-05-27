@@ -203,6 +203,8 @@ def main() -> None:
             continue
         started = time.perf_counter()
         stage = "init"
+        image_path = ""
+        attacked_path = ""
         try:
             stage = "payload"
             payload_bits = bits_from_payload_row(messages[sample_index])
@@ -238,8 +240,6 @@ def main() -> None:
             clean_recon = mapping_func.decode_secret(pred_noise=init_latent_np, **random_input_args)
             clean = bit_metrics(payload_bits, secret_to_bits(clean_recon))
 
-            image_path = ""
-            attacked_path = ""
             inversion: dict[str, object] | None = None
             encoder_decode_error = ""
             recon_error = ""
@@ -374,6 +374,11 @@ def main() -> None:
                     "method": "mas_grdh",
                     "variant": args.mapping_func,
                     "sample_index": sample_index,
+                    "attack_kind": args.attack_kind,
+                    "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "image_path": image_path,
+                    "attacked_path": attacked_path,
                     "stage": stage,
                     "error_type": type(exc).__name__,
                     "error_summary": summarize_exception(exc),

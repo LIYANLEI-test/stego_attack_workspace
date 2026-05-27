@@ -140,6 +140,10 @@ def main() -> None:
             continue
         started = time.perf_counter()
         stage = "init"
+        secret_path: Path | None = None
+        recovered_path: Path | None = None
+        stego_path: Path | None = None
+        attacked_path: Path | None = None
         try:
             stage = "payload"
             secret_path = Path(payloads[sample_index]["secret_image_path"]).resolve()
@@ -194,6 +198,13 @@ def main() -> None:
                     "method": "cross",
                     "variant": "official_demo",
                     "sample_index": sample_index,
+                    "attack_kind": args.attack_kind,
+                    "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "image_path": str(secret_path) if secret_path else "",
+                    "stego_path": str(stego_path) if stego_path else "",
+                    "attacked_path": str(attacked_path) if attacked_path else "",
+                    "recovered_path": str(recovered_path) if recovered_path else "",
                     "stage": stage,
                     "error_type": type(exc).__name__,
                     "error_summary": summarize_exception(exc),

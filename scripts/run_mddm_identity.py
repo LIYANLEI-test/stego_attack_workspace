@@ -158,6 +158,8 @@ def main() -> None:
             continue
         started = time.perf_counter()
         stage = "init"
+        record: dict[str, object] = {}
+        attacked_path = ""
         try:
             stage = "payload"
             if args.payload_bytes is None:
@@ -180,7 +182,6 @@ def main() -> None:
             record_path = record_dir / f"{generated['image_id']}.json"
             record = json.loads(record_path.read_text(encoding="utf-8"))
             image_override = None
-            attacked_path = ""
             if args.attack_kind != "identity":
                 stage = f"{args.attack_kind}_attack"
                 from PIL import Image
@@ -232,6 +233,11 @@ def main() -> None:
                 {
                     "method": "mddm",
                     "sample_index": sample_index,
+                    "attack_kind": args.attack_kind,
+                    "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "image_path": str(record.get("image_path", "")),
+                    "attacked_path": attacked_path,
                     "stage": stage,
                     "error_type": type(exc).__name__,
                     "error_summary": summarize_exception(exc),
