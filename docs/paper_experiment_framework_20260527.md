@@ -129,7 +129,7 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
 ```
 
 The monitor does not launch or stop attack jobs. It refreshes live summary,
-delta, Markdown/LaTeX tables, live manifest, and
+delta, Markdown/LaTeX tables, paper-readiness audit, live manifest, and
 `queue_progress_snapshot.{json,md}`. If all selected jobs complete, it writes
 the final non-`_live` reports. For a new queue, replace `--queue-pid` with the
 new driver PID or omit it to let the monitor detect matching queue processes by
@@ -147,6 +147,20 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
 The manifest records the git commit, GPU inventory, quality budget, and script
 entry points for reproducibility. Keep it under `/data2`; do not commit the
 generated JSON, CSV, Markdown, or TeX result artifacts.
+
+Paper-readiness audit:
+
+```sh
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
+  /data2/liyanlei/envs/stego_attack/bin/python \
+  scripts/audit_selected_attack_results.py \
+  --root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527
+```
+
+The audit marks rows as main/appendix/excluded, flags adapted attacks and pilot
+baselines, and checks whether PSNR/LPIPS evidence is present for the quality
+budget. Live summaries without LPIPS recomputation are marked `partial`, not
+treated as fully budget-verified.
 
 ## Reporting Rules
 

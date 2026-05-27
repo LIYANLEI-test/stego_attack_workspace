@@ -27,7 +27,7 @@
       "name": "Add live queue monitor and report refresher",
       "status": "done",
       "script": "scripts/monitor_selected_attack_queue.py",
-      "pid": 6523,
+      "pid": 8962,
       "log": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log"
     }
   ],
@@ -78,13 +78,7 @@
       "phase": "1"
     }
   ],
-  "uncommitted_files": [
-    "scripts/monitor_selected_attack_queue.py",
-    "docs/paper_experiment_framework_20260527.md",
-    ".planning/STATE.md",
-    ".planning/HANDOFF.json",
-    ".planning/.continue-here.md"
-  ],
+  "uncommitted_files": [],
   "next_action": "Keep the selected queue running. Refresh live reports with scripts/monitor_selected_attack_queue.py, inspect logs if the queue exits nonzero, then commit and push final state.",
   "context_notes": "Current formal root is /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527. Large generated CSV/images/logs stay under /data2 and must not be committed."
 }

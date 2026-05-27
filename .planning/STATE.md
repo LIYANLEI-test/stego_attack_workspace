@@ -328,7 +328,7 @@ cross_regen_vae_5_100: 8/100 rows, 0 failures, running
 gsd_cifar10_resize_1_25_500: 21/500 rows, 0 failures, running
 gsd_cifar10_jpeg_80_500: 20/500 rows, 0 failures, running
 driver pid 8246 still running
-monitor pid 6523 running, log: /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log
+monitor pid 8962 running, log: /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log
 ```
 
 Formal queue size:
@@ -375,6 +375,7 @@ Reporting scripts now provide:
 - Markdown/LaTeX paper-table rendering from summary and delta CSVs.
 - Experiment manifest capture for git head, GPU inventory, budget, and script entry points.
 - Live queue monitor that refreshes live reports and writes final reports when all selected jobs complete.
+- Paper-readiness audit that flags incomplete rows, adapted attacks, pilot rows, failure rates, and missing LPIPS evidence.
 
 Live generated reporting artifacts:
 
@@ -384,6 +385,8 @@ Live generated reporting artifacts:
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables_live.md
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables_live.tex
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/experiment_manifest_live.json
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_paper_audit_live.csv
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/selected_attack_paper_audit_live.md
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/queue_progress_snapshot.json
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/queue_progress_snapshot.md
 ```

@@ -139,6 +139,8 @@ def refresh_reports(root: Path, final: bool) -> list[dict[str, object]]:
     md = root / f"paper_tables{suffix}.md"
     tex = root / f"paper_tables{suffix}.tex"
     manifest = root / f"experiment_manifest{suffix}.json"
+    audit_csv = root / f"selected_attack_paper_audit{suffix}.csv"
+    audit_md = root / f"selected_attack_paper_audit{suffix}.md"
 
     commands = [
         [
@@ -177,6 +179,21 @@ def refresh_reports(root: Path, final: bool) -> list[dict[str, object]]:
             str(root),
             "--output",
             str(manifest),
+        ],
+        [
+            str(PYTHON),
+            "scripts/audit_selected_attack_results.py",
+            "--root",
+            str(root),
+            "--summary",
+            str(summary),
+            "--deltas",
+            str(deltas),
+            "--output-csv",
+            str(audit_csv),
+            "--output-md",
+            str(audit_md),
+            *(["--include-incomplete"] if not final else []),
         ],
     ]
     return [run_report(command) for command in commands]
