@@ -150,6 +150,7 @@ def refresh_reports(root: Path, final: bool) -> list[dict[str, object]]:
             str(root),
             "--output",
             str(summary),
+            *(["--include-lpips"] if final else []),
         ],
         [
             str(PYTHON),
