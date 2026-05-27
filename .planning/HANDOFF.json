@@ -1,13 +1,13 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-27T13:12:10+08:00",
+  "timestamp": "2026-05-28T01:47:00+08:00",
   "phase": "4",
   "phase_name": "Evaluation And Analysis",
   "phase_dir": null,
   "plan": "quality-budget-attack-smoke-validation",
-  "task": "stop-oversized-formal-queue",
+  "task": "pulsar-10-precision-controls",
   "total_tasks": 10,
-  "status": "paused_by_user",
+  "status": "smoke_complete_full_run_gated",
   "completed_tasks": [
     {
       "id": "paper_framework",
@@ -22,6 +22,21 @@
       "stopped_at": "2026-05-27T13:12:10+08:00",
       "root": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527",
       "progress": "The queue had reached 5/18 completed jobs, 2173/6550 raw records, and 2083/6370 formal held-out records before it was stopped at the user's request."
+    },
+    {
+      "id": "pulsar_100_selected_smoke",
+      "name": "Pulsar-only 100-sample selected attack smoke",
+      "status": "done",
+      "commit": "08feead",
+      "root": "/data2/liyanlei/stego_attack_data/attack_runs/pulsar_100_selected_20260527",
+      "progress": "Resize 1.25, JPEG 95, median blur 3, Gaussian blur 3, and Regen-VAE q6 each produced 98 positive-payload native reveal failures plus 2 zero-capacity rows."
+    },
+    {
+      "id": "pulsar_10_precision_controls",
+      "name": "Pulsar 10-sample precision controls",
+      "status": "done",
+      "root": "/data2/liyanlei/stego_attack_data/attack_runs/pulsar_10_precision_controls_20260528",
+      "progress": "Native uint16 storage succeeded 10/10; uint8 storage failed 10/10; uint16-preserving resize 1.25, median blur 3, and Gaussian blur 3 each failed 10/10 positive-payload samples."
     }
   ],
   "remaining_tasks": [
@@ -33,7 +48,7 @@
     {
       "id": "ten_sample_smokes",
       "name": "Run or summarize only 10-sample smoke/quality-budget validations for candidate attack methods",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "paper_framework_revision",
@@ -70,15 +85,20 @@
       "decision": "Keep full-scale queue code and reporting framework, but gate execution behind explicit approval.",
       "rationale": "The framework is useful for a paper, but running it prematurely wastes compute and can pollute experiment intent.",
       "phase": "4"
+    },
+    {
+      "decision": "Report Pulsar precision controls by native channel and positive-payload recovery.",
+      "rationale": "Pulsar is recoverable under native 16-bit storage but fails under 8-bit quantization and under mild 16-bit-preserving image-domain perturbations in the 10-sample control.",
+      "phase": "4"
     }
   ],
   "uncommitted_files": [
     ".planning/HANDOFF.json",
     ".planning/.continue-here.md",
-    ".planning/PROJECT.md",
     ".planning/STATE.md",
-    "docs/paper_experiment_framework_20260527.md"
+    ".planning/quick/20260528-pulsar-precision-controls/",
+    "scripts/run_pulsar_identity.py"
   ],
-  "next_action": "Do not restart any selected formal queue. First audit and summarize the already completed 10-sample smoke/quality-budget evidence, then propose a gated formal-evaluation plan for user approval.",
-  "context_notes": "All matching selected_quality_budget_20260527 queue, monitor, and runner processes were killed at approximately 2026-05-27 13:12 CST. `ps` and `nvidia-smi --query-compute-apps` showed no remaining matching workloads. The GitHub commit db5c8f0 contains the reporting hardening; a follow-up state-only commit should record this user stop and scope correction."
+  "next_action": "Do not restart any selected formal queue. Use the Pulsar 10-sample controls to write the paper wording/fair main-matrix design, then continue only 10-sample smoke validations for other candidate attacks unless the user explicitly approves a formal run.",
+  "context_notes": "All matching selected_quality_budget_20260527 queue, monitor, and runner processes were killed at approximately 2026-05-27 13:12 CST. The Pulsar precision-control runner adds --preserve-sample-dtype-attack so resize/blur can be applied on saved PNG bit depth instead of the old RGB uint8 attack path. No full-scale queue should be launched or resumed without explicit user approval."
 }

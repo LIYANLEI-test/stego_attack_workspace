@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
+import png
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[1]
 if str(WORKSPACE_ROOT / "scripts") not in sys.path:
@@ -61,6 +62,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--sample-dtype", default="uint16", choices=["uint8", "uint16"])
+    parser.add_argument(
+        "--preserve-sample-dtype-attack",
+        action="store_true",
+        help="Apply resize/blur attacks directly on the saved PNG bit depth instead of converting through RGB uint8.",
+    )
     parser.add_argument("--force", action="store_true")
     parser.add_argument(
         "--retry-failures",
@@ -149,6 +155,71 @@ def summarize_exception(exc: Exception, max_chars: int = 1000) -> str:
     return text
 
 
+def odd_kernel(name: str, value: float | None) -> int:
+    if value is None:
+        raise ValueError(f"{name} requires attack_factor")
+    kernel = int(round(value))
+    if kernel <= 0 or kernel % 2 == 0:
+        raise ValueError(f"{name} must be a positive odd integer, got {value}")
+    return kernel
+
+
+def read_png_rgb(path: Path, dtype: type[np.integer]) -> np.ndarray:
+    with path.open("rb") as handle:
+        width, height, rows, info = png.Reader(handle).asDirect()
+        planes = int(info.get("planes", 3))
+        image = np.vstack([np.asarray(row, dtype=dtype) for row in rows])
+    return image.reshape((height, width, planes))[:, :, :3]
+
+
+def write_png_rgb(path: Path, image: np.ndarray, dtype: type[np.integer]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    dtype_max = np.iinfo(dtype).max
+    image = np.clip(np.rint(image), 0, dtype_max).astype(dtype)
+    with path.open("wb") as handle:
+        writer = png.Writer(
+            width=image.shape[1],
+            height=image.shape[0],
+            bitdepth=int(np.log2(dtype_max)) + 1,
+            greyscale=False,
+        )
+        writer.write(handle, image.reshape(-1, image.shape[1] * image.shape[2]).tolist())
+
+
+def native_bitdepth_attack_roundtrip_file(
+    input_path: Path,
+    output_path: Path,
+    attack_kind: str,
+    dtype: type[np.integer],
+    resize_factor: float = 1.0,
+    attack_factor: float | None = None,
+) -> None:
+    if attack_kind == "storage":
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(input_path, output_path)
+        return
+    if attack_kind not in {"resize", "mblur", "gblur"}:
+        raise ValueError(f"native bit-depth attack does not support {attack_kind}")
+
+    import cv2
+
+    image = read_png_rgb(input_path, dtype)
+    if attack_kind == "resize":
+        if resize_factor <= 0:
+            raise ValueError(f"resize factor must be positive, got {resize_factor}")
+        height, width = image.shape[:2]
+        attack_width = max(1, int(round(width * resize_factor)))
+        attack_height = max(1, int(round(height * resize_factor)))
+        attacked = cv2.resize(image, (attack_width, attack_height), interpolation=cv2.INTER_LINEAR)
+        attacked = cv2.resize(attacked, (width, height), interpolation=cv2.INTER_LINEAR)
+    elif attack_kind == "mblur":
+        attacked = cv2.medianBlur(image, odd_kernel("median blur kernel", attack_factor))
+    else:
+        kernel = odd_kernel("gaussian blur kernel", attack_factor)
+        attacked = cv2.GaussianBlur(image, (kernel, kernel), 0)
+    write_png_rgb(output_path, attacked, dtype)
+
+
 def main() -> None:
     args = parse_args()
     ensure_hf_cache(args.hf_cache_dir, args.hf_endpoint)
@@ -226,13 +297,23 @@ def main() -> None:
                     stage = f"{args.attack_kind}_attack"
                     suffix = attack_suffix(args.attack_kind, args.resize_factor, args.attack_factor)
                     attacked_path = str(image_dir / f"{sample_index:06d}_{suffix}.png")
-                    attack_roundtrip_file(
-                        Path(image_path),
-                        Path(attacked_path),
-                        args.attack_kind,
-                        resize_factor=args.resize_factor,
-                        attack_factor=args.attack_factor,
-                    )
+                    if args.preserve_sample_dtype_attack:
+                        native_bitdepth_attack_roundtrip_file(
+                            Path(image_path),
+                            Path(attacked_path),
+                            args.attack_kind,
+                            sample_dtype,
+                            resize_factor=args.resize_factor,
+                            attack_factor=args.attack_factor,
+                        )
+                    else:
+                        attack_roundtrip_file(
+                            Path(image_path),
+                            Path(attacked_path),
+                            args.attack_kind,
+                            resize_factor=args.resize_factor,
+                            attack_factor=args.attack_factor,
+                        )
                     load_path = attacked_path
                 stage = "load_attacked_image"
                 hidden = stego.load_sample(load_path, dtype=sample_dtype)
