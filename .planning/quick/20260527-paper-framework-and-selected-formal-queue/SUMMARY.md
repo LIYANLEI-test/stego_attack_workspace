@@ -12,6 +12,7 @@ Added the paper-grade selected-attack framework:
 docs/paper_experiment_framework_20260527.md
 scripts/selected_attack_matrix.py
 scripts/run_selected_attack_queue.py
+scripts/monitor_selected_attack_queue.py
 scripts/summarize_selected_attack_runs.py
 ```
 
@@ -31,6 +32,7 @@ Verification completed:
 python -m py_compile selected queue/summary scripts and method runners
 scripts/run_selected_attack_queue.py --dry-run
 scripts/summarize_selected_attack_runs.py on empty output root
+scripts/monitor_selected_attack_queue.py --once
 git diff --check
 ```
 
@@ -39,3 +41,6 @@ The framework is ready to launch the formal selected-attack queue under:
 ```text
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527
 ```
+
+As of the follow-up update, the queue has been launched and the monitor can
+refresh live reports and write final reports when the queue finishes.

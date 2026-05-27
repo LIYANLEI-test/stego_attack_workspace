@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-25)
 Phase: 1 of 5 (Identity Baseline Finalization)
 Plan: 1 of 3 in current phase
 Status: Formal selected-attack queue running under `/data2`
-Last activity: 2026-05-27 06:18 CST - Launched selected quality-budget formal queue and verified first CRoSS rows are being written.
+Last activity: 2026-05-27 08:47 CST - Added selected queue monitor, refreshed live reports, and updated handoff state while the formal queue continued running.
 
 Progress: [=---------] 5%
 
@@ -44,7 +44,7 @@ Recent decisions affecting current work:
 - Keep MDDM labeled `native_third_party`; do not call it official.
 - Keep Diffusion-Stego labeled `nsdser_reference`; projection-only checks are not full image recovery.
 - Commit and push task updates to GitHub after meaningful state changes.
-- Do not resume formal attack sweeps until the baseline set is re-evaluated and strengthened; the current matrix is useful as pilot/checkpoint data, not final comparative evidence.
+- Proceed with the selected quality-budget formal queue after stronger attack candidates were scoped; keep paper claim boundaries explicit.
 - Treat `andrekassis/ai-watermark`/UnMarker as an attack-method candidate only, not a hiding/steganography baseline.
 - Treat `XuandongZhao/WatermarkAttacker` Regen-VAE as a stronger adapted attack-method candidate, not a hiding/steganography baseline.
 - Treat `and-mill/semantic-forgery` as related semantic-watermark attack work, not a current hidden-payload destruction baseline.
@@ -317,6 +317,20 @@ cross_gblur_3_100: 46/100 rows, 0 failures
 driver pid 8246 still running
 ```
 
+Queue progress as of 2026-05-27 08:47 CST:
+
+```text
+cross_gblur_3_100: 100/100 rows, 0 failures, complete
+cross_jpeg_50_100: 100/100 rows, 0 failures, complete
+cross_mblur_3_100: 100/100 rows, 0 failures, complete
+cross_resize_1_5_100: 86/100 rows, 0 failures, running
+cross_regen_vae_5_100: 8/100 rows, 0 failures, running
+gsd_cifar10_resize_1_25_500: 21/500 rows, 0 failures, running
+gsd_cifar10_jpeg_80_500: 20/500 rows, 0 failures, running
+driver pid 8246 still running
+monitor pid 6523 running, log: /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log
+```
+
 Formal queue size:
 
 - CRoSS: 5 selected attacks x 100 samples.
@@ -360,6 +374,7 @@ Reporting scripts now provide:
 - explicit completion/failure rates so partial live results are not mistaken for final formal tables.
 - Markdown/LaTeX paper-table rendering from summary and delta CSVs.
 - Experiment manifest capture for git head, GPU inventory, budget, and script entry points.
+- Live queue monitor that refreshes live reports and writes final reports when all selected jobs complete.
 
 Live generated reporting artifacts:
 
@@ -369,6 +384,8 @@ Live generated reporting artifacts:
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables_live.md
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/paper_tables_live.tex
 /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/experiment_manifest_live.json
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/queue_progress_snapshot.json
+/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/queue_progress_snapshot.md
 ```
 
 Paper framework decisions:
@@ -399,10 +416,9 @@ None in `.planning/todos/pending/` yet.
 
 ### Blockers/Concerns
 
-- `gsd-sdk` wrapper at `/home/liyanlei/bin/gsd-sdk` currently imports a missing `/tmp/get-shit-done-codex-install/sdk/dist/cli.js`; use manual `.planning/` updates or fallback tools until repaired.
+- `gsd-sdk` wrapper at `/home/liyanlei/bin/gsd-sdk` lost its temporary SDK target; a local `gsd-tools.cjs` query fallback was installed on 2026-05-27 so common GSD queries work again.
 - RGS attack runs remain intentionally skipped for speed unless explicitly requested.
-- `gsd-sdk` is still broken, so quick tasks are recorded manually in `.planning/quick/`.
-- Baseline adequacy is now a blocking methodological concern; do not resume queued attacks until the baseline set is re-scoped.
+- Baseline adequacy remains a methodological concern for final claims, but it is no longer blocking the selected quality-budget formal queue requested by the user.
 
 ## Deferred Items
 
@@ -413,5 +429,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-26 CST
-Stopped at: Identity-scale non-RGS attack queue intentionally stopped. Resize 0.5 and 0.75 are complete; resize 1.25 and 1.5 are partial; formal storage/JPEG/blur scale did not start under this queue. Next action is baseline re-scope before any more attack execution.
+Stopped at: Selected quality-budget formal queue running under `/data2`; monitor and live report refresh are available. Next action is to keep monitoring, inspect logs on failure, and write final reports when all selected jobs complete.
 Resume file: `.planning/.continue-here.md`

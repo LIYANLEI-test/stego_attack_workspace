@@ -1,77 +1,90 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-26T13:23:18+08:00",
+  "timestamp": "2026-05-27T08:47:26+08:00",
   "phase": "1",
   "phase_name": "Identity Baseline Finalization",
   "phase_dir": null,
-  "plan": null,
-  "task": null,
-  "total_tasks": null,
-  "status": "paused",
+  "plan": "selected-quality-budget-formal-queue",
+  "task": "monitor-formal-selected-attacks",
+  "total_tasks": 18,
+  "status": "running",
   "completed_tasks": [
     {
-      "id": "resize_0.5",
-      "name": "Formal identity-scale resize factor 0.5 for current non-RGS methods",
+      "id": "paper_framework",
+      "name": "Paper-grade selected attack framework and queue scripts",
       "status": "done",
-      "commit": "d775231"
+      "commit": "f4a4d9c"
     },
     {
-      "id": "resize_0.75",
-      "name": "Formal identity-scale resize factor 0.75 for current non-RGS methods",
-      "status": "done",
-      "commit": "d775231"
+      "id": "selected_queue_launch",
+      "name": "Launch formal selected quality-budget attack queue",
+      "status": "running",
+      "pid": 8246,
+      "root": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527"
     },
     {
-      "id": "pause_queue",
-      "name": "Stop active formal attack queue after baseline adequacy concern",
+      "id": "live_monitor",
+      "name": "Add live queue monitor and report refresher",
       "status": "done",
-      "progress": "No matching queue or method runner processes remained at the pause check; GPUs were idle or near-idle."
+      "script": "scripts/monitor_selected_attack_queue.py",
+      "pid": 6523,
+      "log": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log"
     }
   ],
   "remaining_tasks": [
     {
-      "id": "baseline_rescope",
-      "name": "Reassess and strengthen the baseline set before more formal attacks",
-      "status": "blocking"
+      "id": "watch_queue",
+      "name": "Monitor queue until all 18 selected attack jobs finish or a failure is logged",
+      "status": "in_progress"
     },
     {
-      "id": "attack_resume_decision",
-      "name": "Resume or redesign storage/JPEG/blur/resize formal sweeps only after the accepted baseline plan is committed",
-      "status": "not_started"
+      "id": "final_reports",
+      "name": "Generate final summary, delta, paper tables, and experiment manifest after queue completion",
+      "status": "pending"
+    },
+    {
+      "id": "paper_readiness_audit",
+      "name": "Review final tables for quality-budget compliance, provenance labels, and weak rows before paper claims",
+      "status": "pending"
     }
   ],
   "blockers": [
     {
-      "description": "The user judged the current baseline set too small/weak for a convincing comparison.",
-      "type": "human_action",
-      "workaround": "Treat current attack outputs as checkpoint/pilot data and produce a stronger baseline plan before running more queues."
+      "description": "RGS remains excluded from attacks because runtime is too high for the current queue.",
+      "type": "methodological",
+      "workaround": "Keep RGS identity-only unless the user later accepts the compute cost."
     },
     {
-      "description": "gsd-sdk wrapper is broken and imports a missing temporary install path.",
-      "type": "technical",
-      "workaround": "Maintain .planning files manually until the wrapper is repaired."
+      "description": "Diffusion-Stego remains projection-only in this workspace.",
+      "type": "methodological",
+      "workaround": "Exclude it from full image-attack claims until a generated-image reveal path is implemented."
     }
   ],
-  "human_actions_pending": [
-    {
-      "action": "Approve the stronger baseline set and whether to include slower RGS attacks.",
-      "context": "Formal attack execution should not continue until the comparison set is considered strong enough.",
-      "blocking": true
-    }
-  ],
+  "human_actions_pending": [],
   "decisions": [
     {
-      "decision": "Stop the identity-scale attack queue instead of continuing the weak baseline matrix.",
-      "rationale": "Continuing would spend GPU time scaling a comparison design the user no longer accepts.",
+      "decision": "Proceed with the selected quality-budget formal queue after stronger attack candidates were scoped.",
+      "rationale": "The user requested autonomous continuation toward a reliable paper framework.",
       "phase": "1"
     },
     {
-      "decision": "Keep payload and recovery semantics method-native.",
-      "rationale": "Paper alignment is more important than forcing a synthetic common payload size.",
+      "decision": "Use stego-vs-attacked PSNR >= 30 dB and LPIPS <= 0.10 as the fairness budget.",
+      "rationale": "This separates image quality from payload destruction and makes attack parameters comparable.",
+      "phase": "1"
+    },
+    {
+      "decision": "Treat Regen-VAE and UnMarker as adapted attack baselines, not full paper reproductions.",
+      "rationale": "The workspace uses their attack primitives inside native reveal protocols rather than reproducing their complete original evaluation harnesses.",
       "phase": "1"
     }
   ],
-  "uncommitted_files": [],
-  "next_action": "Draft a stronger official/public baseline set and update .planning before restarting any formal attack queue.",
-  "context_notes": "The queue root is /data2/liyanlei/stego_attack_data/attack_runs/unified_identity_scale_20260526. Resize 0.5 and 0.75 completed at formal scale; resize 1.25 and 1.5 are partial because the queue was intentionally stopped."
+  "uncommitted_files": [
+    "scripts/monitor_selected_attack_queue.py",
+    "docs/paper_experiment_framework_20260527.md",
+    ".planning/STATE.md",
+    ".planning/HANDOFF.json",
+    ".planning/.continue-here.md"
+  ],
+  "next_action": "Keep the selected queue running. Refresh live reports with scripts/monitor_selected_attack_queue.py, inspect logs if the queue exits nonzero, then commit and push final state.",
+  "context_notes": "Current formal root is /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527. Large generated CSV/images/logs stay under /data2 and must not be committed."
 }
