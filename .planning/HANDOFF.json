@@ -1,101 +1,84 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-27T10:08:00+08:00",
+  "timestamp": "2026-05-27T13:12:10+08:00",
   "phase": "4",
   "phase_name": "Evaluation And Analysis",
   "phase_dir": null,
-  "plan": "selected-quality-budget-formal-queue",
-  "task": "monitor-formal-selected-attacks",
-  "total_tasks": 18,
-  "status": "running",
+  "plan": "quality-budget-attack-smoke-validation",
+  "task": "stop-oversized-formal-queue",
+  "total_tasks": 10,
+  "status": "paused_by_user",
   "completed_tasks": [
     {
       "id": "paper_framework",
-      "name": "Paper-grade selected attack framework and queue scripts",
+      "name": "Paper-grade selected attack framework and reporting scripts",
       "status": "done",
-      "commit": "f4a4d9c"
+      "commit": "db5c8f0"
     },
     {
-      "id": "selected_queue_launch",
-      "name": "Launch formal selected quality-budget attack queue",
-      "status": "running",
-      "pid": 8246,
+      "id": "oversized_queue_stopped",
+      "name": "Stop accidentally continued selected formal queue",
+      "status": "done",
+      "stopped_at": "2026-05-27T13:12:10+08:00",
       "root": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527",
-      "progress": "As of 2026-05-27 13:07 CST, 5/18 selected jobs are complete; raw generated records are 2173/6550 and formal held-out records are 2083/6370, with no recorded failures."
-    },
-    {
-      "id": "live_monitor",
-      "name": "Add live queue monitor and report refresher",
-      "status": "done",
-      "script": "scripts/monitor_selected_attack_queue.py",
-      "pid": 23026,
-      "log": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log"
-    },
-    {
-      "id": "heldout_reporting",
-      "name": "Exclude calibration indices and harden failure/provenance reporting",
-      "status": "done",
-      "quick_task": ".planning/quick/20260527-held-out-formal-evaluation"
+      "progress": "The queue had reached 5/18 completed jobs, 2173/6550 raw records, and 2083/6370 formal held-out records before it was stopped at the user's request."
     }
   ],
   "remaining_tasks": [
     {
-      "id": "watch_queue",
-      "name": "Monitor queue until all 18 selected attack jobs finish or a failure is logged",
-      "status": "in_progress"
-    },
-    {
-      "id": "final_reports",
-      "name": "Generate final summary, delta, paper tables, and experiment manifest after queue completion",
+      "id": "smoke_only_review",
+      "name": "Treat existing oversized outputs as accidental checkpoint data; do not cite as final formal evaluation without explicit user approval",
       "status": "pending"
     },
     {
-      "id": "paper_readiness_audit",
-      "name": "Review final tables for quality-budget compliance, provenance labels, and weak rows before paper claims",
+      "id": "ten_sample_smokes",
+      "name": "Run or summarize only 10-sample smoke/quality-budget validations for candidate attack methods",
+      "status": "pending"
+    },
+    {
+      "id": "paper_framework_revision",
+      "name": "Keep full-scale execution gated behind explicit user approval after smoke results",
       "status": "pending"
     }
   ],
   "blockers": [
     {
-      "description": "RGS remains excluded from attacks because runtime is too high for the current queue.",
-      "type": "methodological",
-      "workaround": "Keep RGS identity-only unless the user later accepts the compute cost."
+      "description": "Do not resume 500/6550-scale attack queues automatically. The user clarified that the intended current work was 10-sample testing only.",
+      "type": "human_action",
+      "workaround": "Require explicit user approval before any full-scale queue is launched or resumed."
     },
     {
-      "description": "Diffusion-Stego remains projection-only in this workspace.",
+      "description": "Existing selected_quality_budget_20260527 outputs are partial and include more than the requested 10-sample smoke scope.",
       "type": "methodological",
-      "workaround": "Exclude it from full image-attack claims until a generated-image reveal path is implemented."
+      "workaround": "Keep them under /data2 as accidental checkpoint data; separate them from paper claims unless the user later approves a formal full run."
     }
   ],
-  "human_actions_pending": [],
+  "human_actions_pending": [
+    {
+      "action": "Approve any future full-scale formal queue explicitly",
+      "context": "The previous context handoff caused an accidental continuation to 6550 planned raw records.",
+      "blocking": true
+    }
+  ],
   "decisions": [
     {
-      "decision": "Proceed with the selected quality-budget formal queue after stronger attack candidates were scoped.",
-      "rationale": "The user requested autonomous continuation toward a reliable paper framework.",
-      "phase": "1"
-    },
-    {
-      "decision": "Use stego-vs-attacked PSNR >= 30 dB and LPIPS <= 0.10 as the fairness budget.",
-      "rationale": "This separates image quality from payload destruction and makes attack parameters comparable.",
-      "phase": "1"
-    },
-    {
-      "decision": "Treat Regen-VAE and UnMarker as adapted attack baselines, not full paper reproductions.",
-      "rationale": "The workspace uses their attack primitives inside native reveal protocols rather than reproducing their complete original evaluation harnesses.",
+      "decision": "Stop the selected quality-budget formal queue immediately.",
+      "rationale": "The user clarified they only intended 10-sample testing to verify candidate attacks, not a full 6550-record run.",
       "phase": "4"
     },
     {
-      "decision": "Exclude calibration sample indices 0-9 from formal paper estimates.",
-      "rationale": "Those samples selected attack parameters, so retaining them in formal tables would leak selection into evaluation.",
-      "phase": "4"
-    },
-    {
-      "decision": "Only score native recovery failures as zero when a saved measurable attacked image pair exists.",
-      "rationale": "Runner failures before an attacked artifact exists do not demonstrate attack effectiveness.",
+      "decision": "Keep full-scale queue code and reporting framework, but gate execution behind explicit approval.",
+      "rationale": "The framework is useful for a paper, but running it prematurely wastes compute and can pollute experiment intent.",
       "phase": "4"
     }
   ],
-  "uncommitted_files": [],
-  "next_action": "Keep the selected queue running. When it completes, require final LPIPS coverage and fixed-budget audit on held-out rows before using paper claims; inspect and repair any unscorable failures rather than treating them as attack success.",
-  "context_notes": "Current formal root is /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527. Raw output retains calibration records, but formal reports exclude sample indices 0-9. Main-table candidates are CRoSS, GSD CIFAR10, MAS/GRDH, and Pulsar; MDDM is appendix-only. Large generated CSV/images/logs stay under /data2 and must not be committed."
+  "uncommitted_files": [
+    ".planning/HANDOFF.json",
+    ".planning/.continue-here.md",
+    ".planning/PROJECT.md",
+    ".planning/STATE.md",
+    "docs/paper_experiment_framework_20260527.md"
+  ],
+  "next_action": "Do not restart any selected formal queue. First audit and summarize the already completed 10-sample smoke/quality-budget evidence, then propose a gated formal-evaluation plan for user approval.",
+  "context_notes": "All matching selected_quality_budget_20260527 queue, monitor, and runner processes were killed at approximately 2026-05-27 13:12 CST. `ps` and `nvidia-smi --query-compute-apps` showed no remaining matching workloads. The GitHub commit db5c8f0 contains the reporting hardening; a follow-up state-only commit should record this user stop and scope correction."
 }

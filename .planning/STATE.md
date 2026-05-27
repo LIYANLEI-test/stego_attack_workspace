@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-05-27)
 
 **Core value:** Produce reproducible, paper-aligned attack experiments that preserve native baseline semantics and honest provenance labels.
-**Current focus:** Paper-grade selected-attack framework and formal quality-budget sweeps for runnable non-RGS methods.
+**Current focus:** Paper-grade attack framework with 10-sample quality-budget smoke validation; full-scale queues are gated behind explicit user approval.
 
 ## Current Position
 
 Phase: 4 of 5 (Evaluation And Analysis)
 Plan: selected held-out formal queue and paper-readiness audit
-Status: Formal selected-attack queue running under `/data2`
-Last activity: 2026-05-27 13:07 CST - Separated calibration from held-out reporting, hardened failure scoring and provenance fields, and refreshed live reports while the formal queue continued running.
+Status: Formal selected-attack queue stopped at user's request; only 10-sample smoke validation should continue without further approval
+Last activity: 2026-05-27 13:12 CST - Stopped the oversized selected formal queue after the user clarified the intended scope was 10-sample testing, not a 6550-record planned run.
 
 Progress: [======----] 60%
 
@@ -47,7 +47,7 @@ Recent decisions affecting current work:
 - Keep MDDM labeled `native_third_party`; do not call it official.
 - Keep Diffusion-Stego labeled `nsdser_reference`; projection-only checks are not full image recovery.
 - Commit and push task updates to GitHub after meaningful state changes.
-- Proceed with the selected quality-budget formal queue after stronger attack candidates were scoped; keep paper claim boundaries explicit.
+- Keep the selected quality-budget formal queue framework, but do not launch or resume full-scale queues without explicit user approval.
 - Treat `andrekassis/ai-watermark`/UnMarker as an attack-method candidate only, not a hiding/steganography baseline.
 - Treat `XuandongZhao/WatermarkAttacker` Regen-VAE as a stronger adapted attack-method candidate, not a hiding/steganography baseline.
 - Treat `and-mill/semantic-forgery` as related semantic-watermark attack work, not a current hidden-payload destruction baseline.
@@ -382,6 +382,23 @@ GSD resize/JPEG/Regen-VAE/UnMarker: running with 0 failures
 driver pid 8246 and monitor pid 23026 still running
 ```
 
+User stop at 2026-05-27 13:12 CST:
+
+```text
+The user clarified that the current intended work was 10-sample testing to see
+whether candidate attacks can pass the protocol, not a 6550-record planned
+formal queue. The selected_quality_budget_20260527 queue and all matching
+active runners were stopped.
+
+Stopped processes included driver 8246, monitor 23026, and active runner PIDs
+2672, 10521, 26258, and 31750. Follow-up `ps` and `nvidia-smi
+--query-compute-apps` checks showed no remaining matching workloads.
+
+Do not resume this root or any other full-scale selected queue unless the user
+explicitly approves it. Treat existing outputs as accidental partial checkpoint
+data, not final paper evidence.
+```
+
 Raw queue generation size:
 
 - CRoSS: 5 selected attacks x 100 samples.
@@ -485,7 +502,8 @@ None in `.planning/todos/pending/` yet.
 
 - `gsd-sdk` wrapper at `/home/liyanlei/bin/gsd-sdk` lost its temporary SDK target; a local `gsd-tools.cjs` query fallback was installed on 2026-05-27 so common GSD queries work again.
 - RGS attack runs remain intentionally skipped for speed unless explicitly requested.
-- Baseline adequacy remains a methodological concern for final claims, but it is no longer blocking the selected quality-budget formal queue requested by the user.
+- Baseline adequacy remains a methodological concern for final claims.
+- Full-scale selected-attack queue execution is blocked until the user explicitly approves it after 10-sample smoke evidence is summarized.
 
 ## Deferred Items
 
@@ -496,5 +514,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-27 CST
-Stopped at: Selected quality-budget formal queue running under `/data2`; formal summaries now use held-out samples and distinguish scorable from unscorable failures. Next action is to keep monitoring, run final LPIPS/audit outputs at completion, and exclude any row that fails the fixed quality budget without retuning.
+Stopped at: Selected quality-budget formal queue was killed after the user clarified only 10-sample testing was intended. Next action is to summarize smoke/quality-budget evidence and keep full-scale execution gated behind explicit user approval.
 Resume file: `.planning/.continue-here.md`

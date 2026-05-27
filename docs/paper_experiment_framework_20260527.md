@@ -16,8 +16,9 @@ The framework separates three things that are easy to mix up:
 
 ## Current Main-Table Candidates
 
-Use these methods in the main paper table if the formal selected-attack runs
-complete at the planned counts:
+Use these methods in the main paper table only if the user explicitly approves
+a full-scale selected-attack run after 10-sample smoke validation, and if those
+runs complete at the planned counts:
 
 | Method | Payload type | Label | Raw generated | Formal held-out | Main recovery metric |
 |--------|--------------|-------|---------------|-----------------|----------------------|
@@ -82,7 +83,12 @@ Selected formal matrix source of truth:
 scripts/selected_attack_matrix.py
 ```
 
-Formal queue:
+Formal queue, gated:
+
+Do not launch or resume this queue during candidate validation. The current
+default scope is 10-sample smoke testing. Full-scale execution requires
+explicit user approval because a stale handoff previously caused an accidental
+6550-record planned run to continue.
 
 ```sh
 env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \

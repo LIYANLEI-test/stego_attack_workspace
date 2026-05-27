@@ -5,9 +5,9 @@
 This is a research workspace for steganographic message-destruction experiments. It integrates native or native-like generation/recovery paths for CRoSS, Pulsar, GSD, MAS/GRDH, MDDM, Diffusion-Stego, and RGS, then uses their generated stego artifacts as attack targets.
 
 Identity baselines are now recorded for the runnable native/native-like paths.
-The immediate work is the running held-out selected-attack evaluation under a
-fixed image-quality budget, with provenance and failure handling suitable for
-paper claims.
+The immediate work is 10-sample quality-budget smoke validation for candidate
+attack methods. Full-scale selected-attack queues are available in the
+framework, but require explicit user approval before launch or resume.
 
 ## Core Value
 
