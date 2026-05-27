@@ -20,7 +20,8 @@
       "name": "Launch formal selected quality-budget attack queue",
       "status": "running",
       "pid": 8246,
-      "root": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527"
+      "root": "/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527",
+      "progress": "As of 2026-05-27 09:15 CST, 4/18 selected jobs complete and GSD CIFAR10 Regen-VAE has started automatically after CRoSS resize completed."
     },
     {
       "id": "live_monitor",

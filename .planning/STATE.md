@@ -331,6 +331,21 @@ driver pid 8246 still running
 monitor pid 8962 running, log: /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527/logs/queue_monitor.log
 ```
 
+Queue progress as of 2026-05-27 09:15 CST:
+
+```text
+cross_gblur_3_100: 100/100 rows, 0 failures, complete
+cross_jpeg_50_100: 100/100 rows, 0 failures, complete
+cross_mblur_3_100: 100/100 rows, 0 failures, complete
+cross_resize_1_5_100: 100/100 rows, 0 failures, complete
+cross_regen_vae_5_100: 26/100 rows, 0 failures, running
+gsd_cifar10_resize_1_25_500: 66/500 rows, 0 failures, running
+gsd_cifar10_jpeg_80_500: 65/500 rows, 0 failures, running
+gsd_cifar10_regen_vae_6_500: 3/500 rows, 0 failures, running
+driver pid 8246 still running
+monitor pid 8962 still running
+```
+
 Formal queue size:
 
 - CRoSS: 5 selected attacks x 100 samples.
