@@ -25,7 +25,7 @@ The v1 path starts by closing the native identity baseline ledger, then defines 
 **Success Criteria** (what must be TRUE):
   1. RGS either reaches 100/100 records or is explicitly documented as interrupted/resumable with the exact last sample and process state.
   2. `docs/native_generation_status.md` and a concise summary identify completed, pilot, projection-only, and failed-native records.
-  3. All method labels match implementation provenance and no MDDM/Diffusion-Stego result is overstated.
+  3. All method labels match implementation provenance and no MDDM result is overstated.
   4. GitHub contains only scripts, configs, docs, and summary/planning state, not large generated artifacts.
 **Plans**: 3 plans
 

@@ -37,15 +37,15 @@ The workspace matches the current task framing:
 - top-level scripts are thin runners, protocol builders, or manifest writers;
 - no workspace replacement implementation under `src/stego_baselines` is
   present;
-- Diffusion-Stego is explicitly labelled as an NS-DSer reference integration,
-  not as an official native checkout;
+- Diffusion-Stego is removed from active baselines because only a projection-only
+  NS-DSer reference path was available;
 - MDDM is explicitly labelled as third-party code, not official author code.
 
 The accurate claim is therefore:
 
 ```text
 native original-repository generation as far as practical, with documented
-third-party/reference exceptions and local compatibility patches that preserve
+third-party/pilot exceptions and local compatibility patches that preserve
 the paper method semantics
 ```
 
@@ -117,15 +117,9 @@ The repository is not confirmed as official author code. The workspace labels it
 
 ### Diffusion-Stego
 
-`scripts/run_diffusion_stego_nsdser_sample.py` imports the supplied NS-DSer
-reference implementation from:
-
-```text
-/home/liyanlei/work/NS-DSer-master/NS-DSer-master/utils/projection.py
-/home/liyanlei/work/NS-DSer-master/NS-DSer-master/ldm/models/diffusion/heun.py
-```
-
-This remains labelled `nsdser_reference`, not `native_official`.
+Removed from the active project on 2026-05-28. The available NS-DSer reference
+path only validated projection encode/decode and did not provide a full
+generated-image reveal baseline suitable for attack evaluation.
 
 ### RGS
 

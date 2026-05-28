@@ -114,8 +114,9 @@ attack candidate, so it is not selected here.
 - MDDM remains a `native_third_party` 128-byte pilot. It is useful for local
   calibration but should not be described as an official baseline.
 - RGS is excluded from this calibration per the runtime decision to skip RGS
-  attacks for now. Diffusion-Stego remains excluded because the current
-  workspace path is projection-only, not full image generation/reveal.
+  attacks for now. Diffusion-Stego has since been removed from the active
+  project because the old path was projection-only, not full image
+  generation/reveal.
 - UnMarker is currently integrated only for GSD. It is an adapted attack-method
   candidate, not a hiding/steganography baseline and not a full paper
   reproduction.

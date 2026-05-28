@@ -95,9 +95,8 @@ pilot samples at any tested factor.
   generated state remains in memory. It needs a dedicated attack branch in
   `hide_and_reveal.py` and is expensive at about 18 minutes per image on the
   current machine, so it is not included in this quick 10-sample unified pilot.
-- Diffusion-Stego: the current workspace result is projection-only
-  (`nsdser_reference`), not a complete generated-image reveal path, so a resize
-  image attack would be misleading here.
+- Diffusion-Stego: later removed from the active project because the available
+  path was projection-only, not a complete generated-image reveal path.
 
 ## Verification
 

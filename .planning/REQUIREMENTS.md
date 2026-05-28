@@ -19,7 +19,7 @@
 - [x] **ID-03**: RGS identity status records 100 fixed FFHQ image-payload samples with indice accuracy, PSNR/SSIM, and exact-match metrics.
 - [x] **ID-04**: GSD CIFAR10 identity status records 500 method-native bit-payload samples with bit accuracy and exact-match metrics.
 - [x] **ID-05**: MAS/GRDH identity status records 500 method-native bit-payload samples with bit accuracy and exact-match metrics.
-- [x] **ID-06**: Diffusion-Stego identity status records MN, MB, MC, and Multi-bits projection checks as projection-only, not full image recovery.
+- [x] **ID-06**: Diffusion-Stego is removed from active identity and attack baselines because only projection-only NS-DSer checks were available.
 - [x] **ID-07**: MDDM status remains a `native_third_party` capacity/pilot result until an exact formal path is established.
 - [x] **ID-08**: A concise identity summary document points to result roots, logs, commands, and method-specific caveats without committing large data.
 
@@ -56,7 +56,7 @@
 ### Extended Baselines
 
 - **EXT-01**: Add an official MDDM checkout if one is identified and audit it separately from the current third-party backend.
-- **EXT-02**: Replace Diffusion-Stego NS-DSer reference integration with a selected official/public method checkout if required by the final comparison.
+- **EXT-02**: Reconsider Diffusion-Stego only if a selected official/public full image-generation/reveal implementation is identified and audited.
 - **EXT-03**: Add additional attacks or robustness settings after v1 attack evaluation is reproducible.
 
 ## Out of Scope
@@ -66,7 +66,7 @@
 | Git-tracking generated images, model weights, or full CSV result dumps | These artifacts are large and already belong under `/data2`. |
 | Normalizing all methods to one identical payload length | This conflicts with method-native capacity and paper semantics. |
 | Calling MDDM official without an audited official repository | Current integrated implementation is third-party. |
-| Treating Diffusion-Stego projection checks as full image-generation identity results | Projection checks validate payload mapping only. |
+| Reintroducing Diffusion-Stego projection checks as active identity results | Projection checks validate payload mapping only and are no longer part of the project. |
 
 ## Traceability
 
@@ -108,4 +108,4 @@
 
 ---
 *Requirements defined: 2026-05-25*
-*Last updated: 2026-05-27 during held-out selected-attack evaluation*
+*Last updated: 2026-05-28 after removing Diffusion-Stego from active baselines*

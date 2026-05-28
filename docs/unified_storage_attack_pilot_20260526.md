@@ -73,9 +73,8 @@ official baseline.
 
 - RGS: skipped for storage attack per user instruction because RGS is too slow
   on the current machine.
-- Diffusion-Stego: the current workspace result is projection-only
-  (`nsdser_reference`), not a complete generated-image reveal path, so a
-  storage image attack would be misleading here.
+- Diffusion-Stego: later removed from the active project because the available
+  path was projection-only, not a complete generated-image reveal path.
 
 ## Verification
 

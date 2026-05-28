@@ -39,7 +39,7 @@ Currently excluded from attack main tables:
 | Method | Reason |
 |--------|--------|
 | RGS | official identity complete but attack runtime is too high for current queue |
-| Diffusion-Stego | current workspace path is projection-only, not full image generation/reveal |
+| Diffusion-Stego | removed; old NS-DSer path was projection-only, not full image generation/reveal |
 
 ## Attack Families
 
@@ -293,7 +293,8 @@ Claims that need more work:
 The attack is universal across all generative steganography methods.
 ```
 
-RGS and full Diffusion-Stego are not yet in the attack table.
+RGS is not yet in the attack table; Diffusion-Stego has been removed from the
+active project.
 
 ```text
 MDDM is an official baseline.
@@ -319,5 +320,5 @@ transforms under this workspace's native-reveal protocol.
    it as identity-only due to runtime.
 5. Either integrate an official MDDM implementation or keep MDDM out of main
    claims.
-6. Revisit Diffusion-Stego only after implementing full generated-image reveal,
-   not projection-only encode/decode.
+6. Do not reintroduce Diffusion-Stego unless an official/public full
+   generated-image reveal implementation is selected and audited.

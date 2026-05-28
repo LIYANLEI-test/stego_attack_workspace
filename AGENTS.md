@@ -16,6 +16,8 @@ Keep provenance labels honest:
 
 - CRoSS, Pulsar, GSD, MAS/GRDH, and RGS are `native_official`.
 - MDDM is `native_third_party` until an official implementation is integrated.
-- Diffusion-Stego is `nsdser_reference`; projection-only checks are not full image generation/recovery results.
+- Diffusion-Stego has been removed from the active project because only a
+  projection-only NS-DSer reference path was available; do not re-add it without
+  a full image-generation/reveal implementation.
 
 After meaningful task updates, commit and push to `origin/main` unless the user asks for a separate branch.

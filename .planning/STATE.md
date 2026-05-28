@@ -45,7 +45,7 @@ Recent decisions affecting current work:
 
 - Use native original repository implementations whenever practical.
 - Keep MDDM labeled `native_third_party`; do not call it official.
-- Keep Diffusion-Stego labeled `nsdser_reference`; projection-only checks are not full image recovery.
+- Diffusion-Stego is removed from active baselines because the old NS-DSer path was projection-only, not full image recovery.
 - Commit and push task updates to GitHub after meaningful state changes.
 - Keep the selected quality-budget formal queue framework, but do not launch or resume full-scale queues without explicit user approval.
 - Treat `andrekassis/ai-watermark`/UnMarker as an attack-method candidate only, not a hiding/steganography baseline.
@@ -65,7 +65,6 @@ Result root: `/data2/liyanlei/stego_attack_data/identity_runs/native_identity_20
 - GSD CIFAR10: complete, 500/500 records, mean bit accuracy about 0.874.
 - MAS/GRDH: complete, 500/500 records, mean bit accuracy about 0.958.
 - MDDM 128-byte pilot: complete as pilot only, 50/50 records, 32 exact, mean bit accuracy about 0.999.
-- Diffusion-Stego projection variants: complete projection-only checks, 500/500 exact for MN/MB/MC/Multi-bits.
 - RGS: complete, 100/100 records, 0 failures, mean recovery PSNR about 23.316 dB. RGS attacks are skipped for now because it is too slow.
 
 ### Current Unified Resize Attack Snapshot
@@ -82,7 +81,7 @@ method/factor.
 - Pulsar: complete all four factors as failures; 0 result rows and 10 native reveal failures per factor.
 - MDDM 128-byte pilot: complete all four factors, 10/10 rows and 0 failures each; mean bit accuracy 0.983398 / 0.994336 / 0.998145 / 0.998145.
 - RGS: not included in this quick pilot; needs a dedicated in-memory attack branch and is long-running.
-- Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
+- Diffusion-Stego: removed from the active project.
 
 ### Current Unified Storage Attack Snapshot
 
@@ -98,7 +97,7 @@ than generic 8-bit RGB PIL conversion.
 - Pulsar: complete, 10/10 rows and 0 failures; mean bit accuracy 1.000000 and exact 10/10.
 - MDDM 128-byte pilot: complete, 10/10 rows and 0 failures; mean bit accuracy 0.998535 and exact 7/10.
 - RGS: skipped per user instruction because it is too slow for attack runs on the current machine.
-- Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
+- Diffusion-Stego: removed from the active project.
 
 ### Current Unified JPEG And Blur Attack Snapshot
 
@@ -117,7 +116,7 @@ JPEG quality `90/70/50`, median blur kernel `3/5/7`, and Gaussian blur kernel
 - Pulsar: complete all 9 settings as attacked reveal failures; 0 result rows and 10 native reveal failures per setting.
 - MDDM 128-byte pilot: complete all 9 settings, 10/10 rows and 0 failures each; bit accuracy range 0.933496-0.996680.
 - RGS: skipped per user instruction because it is too slow for attack runs on the current machine.
-- Diffusion-Stego: not included because the current workspace path is projection-only, not full generated-image reveal.
+- Diffusion-Stego: removed from the active project.
 
 ### Paused Identity-Scale Attack Queue
 
@@ -134,8 +133,8 @@ Driver log:
 Queue protocol: same shared image-domain attack insertion as the 10-sample
 pilots, scaled to the current runnable identity/pilot counts per method:
 CRoSS 100, GSD CIFAR10 500, MAS/GRDH 500, Pulsar 500, and MDDM 128-byte pilot
-50. RGS remains excluded for speed. Diffusion-Stego remains excluded because it
-is projection-only in this workspace.
+50. RGS remains excluded for speed. Diffusion-Stego has been removed from the
+active project.
 
 Queued attack settings:
 
@@ -181,7 +180,7 @@ Before restarting any formal attack queue:
 
 - Reassess which stronger official/public baselines should be added.
 - Decide whether to replace or supplement current `native_third_party` MDDM with an official implementation.
-- Decide whether Diffusion-Stego needs a full image-generation/reveal implementation or should stay excluded from image attacks.
+- Do not reintroduce Diffusion-Stego unless an official/public full image-generation/reveal implementation is selected and audited.
 - Keep RGS skipped from attacks only if the user accepts the runtime tradeoff after the stronger baseline plan is clear.
 - Update `.planning/` and push the accepted baseline plan before running more long sweeps.
 
@@ -271,7 +270,7 @@ Caveats:
 - These are 10-sample calibration choices, not final paper-scale tables.
 - These calibration samples are excluded from formal summary statistics by default.
 - RGS remains excluded from attacks for runtime reasons.
-- Diffusion-Stego remains excluded because the current workspace path is projection-only.
+- Diffusion-Stego has been removed from active baselines.
 - MDDM remains `native_third_party`.
 - UnMarker is currently integrated only for GSD and is an adapted attack-method candidate.
 
@@ -476,7 +475,7 @@ Paper framework decisions:
 - Main-table candidates: CRoSS, GSD CIFAR10, MAS/GRDH, Pulsar.
 - MDDM remains pilot/appendix unless official code is integrated.
 - RGS remains identity-only until runtime budget is explicitly accepted.
-- Diffusion-Stego remains projection-only and excluded from image-attack claims.
+- Diffusion-Stego has been removed from active baselines and image-attack claims.
 - Regen-VAE and UnMarker are adapted attack baselines, not full paper reproductions.
 
 ### Quick Tasks Completed
@@ -496,6 +495,7 @@ Paper framework decisions:
 | 2026-05-27 | Pulsar 100-sample selected attack smoke | Pulsar-only 100 samples per selected attack completed; each attack had 2 zero-capacity result rows and 98 positive-capacity native reveal failures, with PSNR >= 40.165 and LPIPS <= 0.060507 |
 | 2026-05-28 | Pulsar precision controls | 10-sample controls show native uint16 storage succeeds 10/10, uint8 storage fails 10/10, and uint16-preserving resize/median/Gaussian blur each fail 10/10 positive-payload samples |
 | 2026-05-28 | Pulsar paper resize/JPEG calibration | Paper-style raw Pulsar 10-sample check on church-256, DDIM50, E*64 key, 8192-byte payload: identity BER 0.284637, resize224 failure 6/10, JPEG Q90 10/10, JPEG Q70 10/10 under BER>0.48 |
+| 2026-05-28 | Remove Diffusion-Stego active baseline | Removed NS-DSer projection-only Diffusion-Stego runners/docs/protocol payloads from the active project; historical `/data2` outputs remain archival only |
 
 ### Pending Todos
 
@@ -517,5 +517,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-05-28 CST
-Stopped at: Pulsar paper-style 10-sample resize/JPEG calibration completed. The raw Pulsar BER path reproduces the ADS paper's basic behavior, while the workspace region/ECC Pulsar runner is a different protocol and should be described separately. Full-scale execution remains gated behind explicit user approval.
+Stopped at: Diffusion-Stego removed from active baselines after confirming only a projection-only NS-DSer path was available. Full-scale execution remains gated behind explicit user approval.
 Resume file: `.planning/.continue-here.md`

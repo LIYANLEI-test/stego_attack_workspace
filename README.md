@@ -17,11 +17,9 @@ results should be interpreted against the original paper settings and any
 deviation must be documented.
 
 Do not use `/home/liyanlei/work/NS-DSer-master` as an implementation source.
-That code was only a reference from another unpublished project. This workspace
-should keep published baselines under `references/` from their own public
-repositories and call those repositories directly through thin runner scripts.
-The exception is Diffusion-Stego, which you explicitly asked to integrate from
-the supplied NS-DSer reference implementation.
+That code was only a reference from another project. This workspace should keep
+published baselines under `references/` from their own public repositories and
+call those repositories directly through thin runner scripts.
 
 ## Current Attack Targets
 
@@ -33,7 +31,6 @@ Pulsar     official repository Sage/region path
 GSD        official/public repository DDPM path
 MAS/GRDH   official repository txt2img path
 MDDM       third-party repository backend path, not official author code
-Diffusion-Stego  NS-DSer reference implementation for MN/MB/MC/Multi-bits
 RGS        official repository hide-and-reveal path
 ```
 
@@ -42,6 +39,7 @@ Removed from the current workspace:
 ```text
 unified SD1.5/SD3 adaptation scripts
 workspace reimplementations under src/stego_baselines
+Diffusion-Stego NS-DSer projection-only integration
 ```
 
 ## Important Directories

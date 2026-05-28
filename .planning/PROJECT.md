@@ -2,7 +2,7 @@
 
 ## What This Is
 
-This is a research workspace for steganographic message-destruction experiments. It integrates native or native-like generation/recovery paths for CRoSS, Pulsar, GSD, MAS/GRDH, MDDM, Diffusion-Stego, and RGS, then uses their generated stego artifacts as attack targets.
+This is a research workspace for steganographic message-destruction experiments. It integrates native or native-like generation/recovery paths for CRoSS, Pulsar, GSD, MAS/GRDH, MDDM, and RGS, then uses their generated stego artifacts as attack targets.
 
 Identity baselines are now recorded for the runnable native/native-like paths.
 The immediate work is 10-sample quality-budget smoke validation for candidate
@@ -35,7 +35,7 @@ Produce reproducible, paper-aligned attack experiments that preserve each baseli
 
 - Reintroducing workspace-level baseline reimplementations as formal native results - this would violate the current native-original-repository rule.
 - Treating MDDM as official author code - the integrated path is `native_third_party` until an official checkout is selected and audited.
-- Treating Diffusion-Stego projection-only identity checks as full SD image generation/recovery results - these checks only validate the NS-DSer Projection payload mapping.
+- Reintroducing Diffusion-Stego from the old NS-DSer projection-only reference path - it was removed from the active project because it was not a full image-generation/reveal baseline.
 - Committing large models, datasets, generated images, or result CSVs to GitHub - those belong under `/data2`.
 
 ## Context
@@ -51,7 +51,6 @@ Current baseline labels:
 | GSD | `native_official` | `scripts/run_gsd_identity.py` |
 | MAS/GRDH | `native_official` | `scripts/run_mas_grdh_identity.py` |
 | MDDM | `native_third_party` | `scripts/run_mddm_identity.py` |
-| Diffusion-Stego | `nsdser_reference` | `scripts/run_diffusion_stego_identity.py` |
 | RGS | `native_official` | `scripts/run_rgs_identity.py` |
 
 Identity protocol summary:
@@ -74,7 +73,6 @@ As of 2026-05-27, completed identity records include:
 - GSD CIFAR10: 500/500 records, mean bit accuracy about 0.874, exact 0/500.
 - MAS/GRDH: 500/500 records, mean bit accuracy about 0.958, exact 0/500.
 - MDDM 128-byte pilot: 50/50 records, mean bit accuracy about 0.999, exact 32/50; capacity exploration only.
-- Diffusion-Stego MN/MB/MC/Multi-bits projection checks: each 500/500 exact; projection-only.
 - RGS: 100/100 records, 0 failures, mean recovery PSNR about 23.316 dB.
 
 Formal attack evaluation:
@@ -84,14 +82,14 @@ Formal attack evaluation:
 - Formal paper summaries exclude `0-9` by default, leaving held-out counts of
   CRoSS `90`, GSD/MAS/GRDH/Pulsar `490`, and MDDM pilot `40`.
 - Main-table candidates are CRoSS, GSD CIFAR10, MAS/GRDH, and Pulsar; MDDM
-  remains appendix-only, and RGS/Diffusion-Stego remain excluded from current
-  attack claims for runtime/full-image-path reasons.
+  remains appendix-only, RGS remains attack-skipped for runtime unless approved,
+  and Diffusion-Stego is removed from current claims.
 
 ## Constraints
 
 - **Native semantics**: Local compatibility changes may handle paths, caches, logging, checkpoint links, and import shims, but must not alter embedding, sampling, inversion, decoding, ECC, payload mapping, or metric logic without labeling the run as a variant.
 - **Data placement**: Large models, datasets, generated images, CSVs, and logs stay under `/data2/liyanlei/...`; GitHub tracks code, small configs, docs, summaries, and planning state.
-- **Provenance**: Method status labels must remain explicit: `native_official`, `native_third_party`, `nsdser_reference`, `pilot`, or `projection-only` as appropriate.
+- **Provenance**: Method status labels must remain explicit: `native_official`, `native_third_party`, `pilot`, or `removed` as appropriate.
 - **Reproducibility**: Runners must be deterministic, resumable, and log failures instead of aborting full sweeps when native method failures occur.
 - **Git workflow**: Task updates should be committed and pushed to `origin/main` unless a future task explicitly calls for a branch.
 
@@ -103,11 +101,11 @@ Formal attack evaluation:
 | Allow local compatibility only outside method semantics | Public research code often needs path/cache/import fixes to run locally | Good |
 | Keep payload shape method-native | Forcing one common payload would make identity and attack results less paper-aligned | Good |
 | Label MDDM as `native_third_party` | The integrated backend is not official author code | Good |
-| Label Diffusion-Stego as `nsdser_reference` and projection checks as projection-only | The current integration comes from supplied NS-DSer reference code rather than a selected official repo | Good |
+| Remove Diffusion-Stego from the active project | Only a projection-only NS-DSer reference path was available, not a full image-generation/reveal baseline | Good |
 | Use GSD planning state for future work | The previous chat lost continuity during compaction/reconnect | Good |
 | Fix an advance quality budget of PSNR >= 30 dB and LPIPS <= 0.10 | Quality-constrained payload destruction is comparable across attacks | Good |
 | Exclude calibration indices `0-9` from paper summaries | Prevent attack-parameter selection leakage into evaluation | Good |
 | Count failed recovery as zero only after a measurable attacked image exists | Avoid reporting runner failures as attack effectiveness | Good |
 
 ---
-*Last updated: 2026-05-27 during held-out selected-attack evaluation.*
+*Last updated: 2026-05-28 after removing Diffusion-Stego from the active project.*

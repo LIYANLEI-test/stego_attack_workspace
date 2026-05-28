@@ -9,9 +9,9 @@ native original-repository generation only, as far as practical
 The generated stego images are attack objects for message-destruction research.
 The steganography generation side should stay as close as possible to each
 published method's own public code. Earlier workspace-level SD1.5/SD3
-adaptations have been removed. Diffusion-Stego is the one exception here: it is
-integrated from the supplied NS-DSer reference implementation because no
-separate official repository is currently selected.
+adaptations have been removed. Diffusion-Stego has also been removed from the
+active project because the available NS-DSer path was projection-only, not a
+full image-generation/reveal baseline.
 
 Local compatibility adaptations are acceptable only when they preserve the
 original method semantics and expected paper behavior. Path plumbing, cache
@@ -29,8 +29,8 @@ acceptable unless explicitly recorded as a non-paper variant.
 | GSD | `native_official` | `scripts/run_gsd_identity.py` | DDPM and CelebA-64 checkpoints under `/data2/liyanlei/stego_attack_models/gsd` |
 | MAS/GRDH | `native_official` | `scripts/run_mas_grdh_identity.py` | SD1.5 `.ckpt` and CLIP under `/data2/liyanlei/stego_attack_models/mas_grdh` |
 | MDDM | `native_third_party` | `scripts/run_mddm_identity.py` | SD1.5 diffusers cache under `/data2/liyanlei/huggingface` |
-| Diffusion-Stego | `nsdser_reference` | `scripts/run_diffusion_stego_identity.py` | NS-DSer local SD1.5 and `/data2/liyanlei/huggingface` |
 | RGS | `native_official` | `scripts/run_rgs_identity.py` | VQGAN, SD1.5-bin, and CLIP under `/data2/liyanlei/stego_attack_models` |
+| Diffusion-Stego | `removed` | none | old projection-only outputs are archival only |
 
 ## Identity Run Status
 
@@ -68,13 +68,14 @@ mas_grdh/identity_results.csv
 mddm_128_pilot/identity_results.csv
   50/50 records; mean bit accuracy 0.999180.
   This remains a native_third_party pilot/appendix result.
+```
 
-diffusion_stego_mn_projection/identity_results.csv
-diffusion_stego_mb_projection/identity_results.csv
-diffusion_stego_mc_projection/identity_results.csv
-diffusion_stego_multi_bits_projection/identity_results.csv
-  500/500 exact for each projection-only variant.
-  These are reference Projection encode/decode checks, not full SD image generation/recovery runs.
+Removed archival records:
+
+```text
+diffusion_stego_*_projection/identity_results.csv
+  Old NS-DSer Projection encode/decode checks only. These are no longer active
+  identity baselines and must not be used in attack tables.
 ```
 
 Identity logs and retained PID-file locations:
@@ -195,19 +196,6 @@ recovered image: /data2/liyanlei/stego_attack_data/baselines/cross/native_offici
 manifest: /data2/liyanlei/stego_attack_data/baselines/cross/native_official_smoke_2step/manifest.json
 ```
 
-Diffusion-Stego NS-DSer reference runner:
-
-```sh
-cd /home/liyanlei/work/stego_attack_workspace
-env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
-  /data2/liyanlei/envs/stego_attack/bin/python \
-  scripts/run_diffusion_stego_nsdser_sample.py \
-  --mapping mn --steps 2 --seeds 0
-```
-
-Use `--mapping mn`, `--mapping mb`, `--mapping mc`, or
-`--mapping multi_bits`.
-
 RGS official hide-and-reveal path:
 
 ```sh
@@ -284,10 +272,5 @@ target so the public script can load.
 MDDM official author code was not found. The `RGlodAkshat` repository remains
 labelled `native_third_party`, not `native_official`.
 
-Diffusion-Stego uses the NS-DSer reference code at:
-
-```text
-/home/liyanlei/work/NS-DSer-master/NS-DSer-master/utils/projection.py
-```
-
-Keep it labelled `nsdser_reference`, not `native_official`.
+Diffusion-Stego is removed from active baselines. The former NS-DSer projection
+checks did not provide a full generated-image reveal path.

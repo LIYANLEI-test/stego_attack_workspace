@@ -35,8 +35,6 @@ Examples:
 Pulsar: dynamic bytes, equal to estimate_regions() capacity for that sample
 MDDM: 2048 printable ASCII bytes for the SD1.5 latent text interface
 MAS/GRDH: 16384 bits for 4*64*64 SD latent payload
-Diffusion-Stego MN/MB/MC: 16384 bits for 4*64*64 SD latent payload
-Diffusion-Stego Multi-bits: 32768 bits for code_len=2
 GSD CIFAR-10: 3072 bits for 3*32*32 DDPM payload
 GSD CelebA-64: 12288 bits for 3*64*64 DDPM payload
 ```
@@ -67,7 +65,6 @@ The protocol keeps each method's native payload shape:
 Pulsar uses the per-sample Sage/region capacity estimated by the official path.
 GSD uses the DCT sign tensor shape used by sample_reverse_dct.
 MAS/GRDH uses the 1-bit-per-latent-element message used by the official mapping module.
-Diffusion-Stego uses the NS-DSer Projection secret shape for each mapping.
 CRoSS and RGS use full secret images instead of bit strings.
 ```
 
@@ -75,5 +72,4 @@ The runners replace random payload generation with deterministic protocol
 payloads so results are comparable and resumable. They should not change
 embedding, sampling, inversion, decoding, ECC, or metric semantics. If a method
 does not have an integrated official repository, the result label must say so;
-currently that applies to MDDM (`native_third_party`) and Diffusion-Stego
-(`nsdser_reference`).
+currently that applies to MDDM (`native_third_party`).

@@ -28,7 +28,6 @@ This environment includes:
 - GSD native smoke dependencies: Torch-DCT / LMDB / TensorBoard / gdown
 - MAS/GRDH native smoke dependencies: OmegaConf / Einops / Kornia /
   PyTorch-Lightning 1.9.5 / Albumentations / pudb
-- NS-DSer Diffusion-Stego reference runner dependencies: Click / Timm
 - SageMath 10.5
 
 Large Hugging Face caches are kept under:

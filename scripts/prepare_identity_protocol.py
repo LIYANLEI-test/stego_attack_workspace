@@ -38,30 +38,6 @@ METHOD_PAYLOAD_SPECS = [
         "note": "Native SD latent shape is 4*64*64 with bit_num=1.",
     },
     {
-        "method": "diffusion_stego_mn",
-        "payload_unit": "bits",
-        "payload_length": 16384,
-        "note": "SD1.5 latent shape is 4*64*64 and MN stores one bit per latent element.",
-    },
-    {
-        "method": "diffusion_stego_mb",
-        "payload_unit": "bits",
-        "payload_length": 16384,
-        "note": "SD1.5 latent shape is 4*64*64 and MB stores one bit per latent element.",
-    },
-    {
-        "method": "diffusion_stego_mc",
-        "payload_unit": "bits",
-        "payload_length": 16384,
-        "note": "SD1.5 latent shape is 4*64*64 and MC stores one bit per latent element.",
-    },
-    {
-        "method": "diffusion_stego_multi_bits",
-        "payload_unit": "bits",
-        "payload_length": 32768,
-        "note": "SD1.5 latent shape is 4*64*64 with code_len=2.",
-    },
-    {
         "method": "gsd_cifar10",
         "payload_unit": "bits",
         "payload_length": 3072,
