@@ -70,8 +70,15 @@ def display_attack(row: dict[str, str]) -> str:
     if attack == "jpeg":
         return f"JPEG q={factor}"
     if attack == "mblur":
+        if factor.startswith("0."):
+            return f"median blur blend a={factor}"
         return f"median blur k={factor}"
     if attack == "gblur":
+        try:
+            if float(factor) < 3:
+                return f"Gaussian blur r={factor}"
+        except ValueError:
+            pass
         return f"Gaussian blur k={factor}"
     if attack == "regen_vae":
         return f"Regen-VAE q={factor}"

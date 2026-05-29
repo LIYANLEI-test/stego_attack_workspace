@@ -9,7 +9,7 @@ from io import BytesIO
 import cv2
 import numpy as np
 import torch
-from PIL import Image
+from PIL import Image, ImageFilter
 
 
 RESIZE_INTERPOLATION = Image.Resampling.BILINEAR
@@ -47,12 +47,20 @@ def jpeg_roundtrip_pil(image: Image.Image, quality: float) -> Image.Image:
 
 
 def median_blur_pil(image: Image.Image, kernel_size: float) -> Image.Image:
+    if 0 < kernel_size < 1:
+        alpha = float(kernel_size)
+        array = np.asarray(image.convert("RGB"), dtype=np.uint8)
+        blurred = cv2.medianBlur(array, 3).astype(np.float32)
+        mixed = array.astype(np.float32) * (1.0 - alpha) + blurred * alpha
+        return Image.fromarray(np.clip(np.rint(mixed), 0, 255).astype(np.uint8), "RGB")
     kernel = _odd_kernel("median blur kernel", kernel_size)
     array = np.asarray(image.convert("RGB"), dtype=np.uint8)
     return Image.fromarray(cv2.medianBlur(array, kernel), "RGB")
 
 
 def gaussian_blur_pil(image: Image.Image, kernel_size: float) -> Image.Image:
+    if 0 < kernel_size < 3:
+        return image.convert("RGB").filter(ImageFilter.GaussianBlur(radius=float(kernel_size)))
     kernel = _odd_kernel("gaussian blur kernel", kernel_size)
     array = np.asarray(image.convert("RGB"), dtype=np.uint8)
     return Image.fromarray(cv2.GaussianBlur(array, (kernel, kernel), 0), "RGB")

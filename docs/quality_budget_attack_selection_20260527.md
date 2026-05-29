@@ -31,11 +31,15 @@ tiny CIFAR-scale images are upsampled to 64x64 only for LPIPS ranking.
 ```text
 resize factor: 0.5, 0.75, 1.25, 1.5
 JPEG quality: 95, 90, 80, 70, 50
-median blur kernel: 3, 5, 7
-Gaussian blur kernel: 3, 5, 7
+median blur strength: 0.25, 0.5, 0.75 soft blend, plus kernels 3, 5, 7
+Gaussian blur strength: radius 0.25, 0.5, 0.75, 1, 1.5, 2, plus kernels 3, 5, 7
 Regen-VAE quality: 6, 5, 4, 3, 2, 1
 UnMarker: high-frequency smoke profile, 25 iterations, GSD only
 ```
+
+The original 2026-05-27 blur grid used only kernels 3, 5, and 7. On
+2026-05-29, softer blur strengths were added for GSD CIFAR10, MAS/GRDH, and
+MDDM-128 pilot after kernel 3 exceeded the quality budget on those methods.
 
 The selection rule is per method and attack family: among parameters inside the
 quality budget, choose the strongest message-destruction setting. For bit
@@ -59,13 +63,19 @@ attack candidate, so it is not selected here.
 | CRoSS `native_official` | Regen-VAE | quality 5 | recovery PSNR 17.101117 dB | 34.569 dB | 0.0780 | 10 / 0 |
 | CRoSS `native_official` | Resize | factor 1.5 | recovery PSNR 19.920919 dB | 36.343 dB | 0.0451 | 10 / 0 |
 | GSD CIFAR10 `native_official` | JPEG | quality 80 | bit accuracy 0.586784 | 31.384 dB | 0.0424 | 10 / 0 |
+| GSD CIFAR10 `native_official` | Gaussian blur | radius 0.5 | bit accuracy 0.811035 | 34.196 dB | 0.0335 | 10 / 0 |
+| GSD CIFAR10 `native_official` | Median blur | soft blend 0.5 | bit accuracy 0.762305 | 33.170 dB | 0.0317 | 10 / 0 |
 | GSD CIFAR10 `native_official` | Regen-VAE | quality 6 | bit accuracy 0.580794 | 31.794 dB | 0.0362 | 10 / 0 |
 | GSD CIFAR10 `native_official` | Resize | factor 1.25 | bit accuracy 0.781608 | 30.801 dB | 0.0803 | 10 / 0 |
 | GSD CIFAR10 `native_official` | UnMarker | high smoke, 25 iter | bit accuracy 0.766016 | 45.132 dB | 0.0006 | 10 / 0 |
+| MAS/GRDH `native_official` | Gaussian blur | radius 0.5 | bit accuracy 0.949420 | 35.099 dB | 0.0303 | 10 / 0 |
 | MAS/GRDH `native_official` | JPEG | quality 50 | bit accuracy 0.843793 | 30.638 dB | 0.0579 | 10 / 0 |
+| MAS/GRDH `native_official` | Median blur | soft blend 0.5 | bit accuracy 0.942993 | 34.684 dB | 0.0460 | 10 / 0 |
 | MAS/GRDH `native_official` | Regen-VAE | quality 6 | bit accuracy 0.881555 | 33.479 dB | 0.0694 | 10 / 0 |
 | MAS/GRDH `native_official` | Resize | factor 1.5 | bit accuracy 0.941510 | 31.560 dB | 0.0878 | 10 / 0 |
+| MDDM 128-byte `native_third_party` | Gaussian blur | radius 0.25 | bit accuracy 0.998535 | 52.140 dB | 0.0018 | 10 / 0 |
 | MDDM 128-byte `native_third_party` | JPEG | quality 70 | bit accuracy 0.987695 | 32.989 dB | 0.0580 | 10 / 0 |
+| MDDM 128-byte `native_third_party` | Median blur | soft blend 0.5 | bit accuracy 0.997852 | 36.378 dB | 0.0738 | 10 / 0 |
 | Pulsar `native_official` | Gaussian blur | kernel 3 | bit accuracy 0.000000 | 42.475 dB | 0.0489 | 0 / 10 |
 | Pulsar `native_official` | JPEG | quality 95 | bit accuracy 0.000000 | 47.753 dB | 0.0025 | 0 / 10 |
 | Pulsar `native_official` | Median blur | kernel 3 | bit accuracy 0.000000 | 43.114 dB | 0.0229 | 0 / 10 |
@@ -83,19 +93,19 @@ attack candidate, so it is not selected here.
 | CRoSS | Regen-VAE | 2 / 6 |
 | GSD CIFAR10 | Resize | 2 / 4 |
 | GSD CIFAR10 | JPEG | 3 / 5 |
-| GSD CIFAR10 | Median blur | 0 / 3 |
-| GSD CIFAR10 | Gaussian blur | 0 / 3 |
+| GSD CIFAR10 | Median blur | 2 / 6 |
+| GSD CIFAR10 | Gaussian blur | 2 / 9 |
 | GSD CIFAR10 | Regen-VAE | 1 / 6 |
 | GSD CIFAR10 | UnMarker | 1 / 1 |
 | MAS/GRDH | Resize | 2 / 4 |
 | MAS/GRDH | JPEG | 5 / 5 |
-| MAS/GRDH | Median blur | 0 / 3 |
-| MAS/GRDH | Gaussian blur | 0 / 3 |
+| MAS/GRDH | Median blur | 2 / 6 |
+| MAS/GRDH | Gaussian blur | 2 / 9 |
 | MAS/GRDH | Regen-VAE | 1 / 6 |
 | MDDM 128-byte pilot | Resize | 0 / 4 |
 | MDDM 128-byte pilot | JPEG | 4 / 5 |
-| MDDM 128-byte pilot | Median blur | 0 / 3 |
-| MDDM 128-byte pilot | Gaussian blur | 0 / 3 |
+| MDDM 128-byte pilot | Median blur | 2 / 6 |
+| MDDM 128-byte pilot | Gaussian blur | 2 / 9 |
 | MDDM 128-byte pilot | Regen-VAE | 0 / 6 |
 | Pulsar | Resize | 3 / 4 |
 | Pulsar | JPEG | 5 / 5 |
@@ -109,6 +119,11 @@ attack candidate, so it is not selected here.
   these 10 samples. This is counted as complete payload destruction, not as a
   missing measurement, because the attacked images are saved and remain within
   the image-quality budget.
+- Soft blur was added on 2026-05-29 for methods where the minimum kernel-3 blur
+  exceeded the quality budget. Median blur strengths below 1 are alpha blends
+  with kernel-3 median blur; Gaussian blur strengths below 3 are radius-based
+  Gaussian blur. This keeps the attack family comparable under the shared
+  quality budget without forcing identical amplitudes across methods.
 - For Pulsar, ties at bit accuracy 0 are broken by higher image quality. That
   is why JPEG quality 95 is selected instead of a harsher JPEG setting.
 - MDDM remains a `native_third_party` 128-byte pilot. It is useful for local
@@ -132,6 +147,7 @@ attack candidate, so it is not selected here.
 /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary.csv
 /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary_selected.csv
 /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/logs/cross_quality_driver.log
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/logs/soft_blur_driver_20260529.log
 ```
 
 ## Verification
@@ -139,14 +155,15 @@ attack candidate, so it is not selected here.
 Commands run:
 
 ```text
-python -m py_compile scripts/run_pulsar_identity.py scripts/select_quality_budget_attacks.py scripts/run_quality_budget_attacks.py scripts/identity_common.py scripts/run_gsd_identity.py scripts/run_mas_grdh_identity.py
+python -m py_compile scripts/run_pulsar_identity.py scripts/select_quality_budget_attacks.py scripts/run_quality_budget_attacks.py scripts/identity_common.py scripts/run_gsd_identity.py scripts/run_mas_grdh_identity.py scripts/attack_common.py scripts/selected_attack_matrix.py scripts/render_paper_tables.py
+python -m unittest discover -s tests -v
 git diff --check
 ```
 
 Selector output:
 
 ```text
-summaries: 106
-selected rows: 18
+summaries: 133
+selected rows: 24
 budget: PSNR >= 30 dB, LPIPS <= 0.10
 ```

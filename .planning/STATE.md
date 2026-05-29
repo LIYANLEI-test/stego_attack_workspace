@@ -260,14 +260,15 @@ failure while still computing quality from the saved stego/attacked image pair.
 Selected parameters:
 
 - CRoSS: resize 1.5, JPEG 50, median blur 3, Gaussian blur 3, Regen-VAE q=5.
-- GSD CIFAR10: resize 1.25, JPEG 80, Regen-VAE q=6, UnMarker high-smoke-25.
-- MAS/GRDH: resize 1.5, JPEG 50, Regen-VAE q=6.
-- MDDM 128-byte pilot: JPEG 70 only; resize, blur, and Regen-VAE had no in-budget destructive candidate in this 10-sample calibration.
+- GSD CIFAR10: resize 1.25, JPEG 80, median blur soft 0.5, Gaussian blur radius 0.5, Regen-VAE q=6, UnMarker high-smoke-25.
+- MAS/GRDH: resize 1.5, JPEG 50, median blur soft 0.5, Gaussian blur radius 0.5, Regen-VAE q=6.
+- MDDM 128-byte pilot: JPEG 70, median blur soft 0.5, Gaussian blur radius 0.25. It remains pilot-only because it is not official author code.
 - Pulsar: resize 1.25, JPEG 95, median blur 3, Gaussian blur 3, Regen-VAE q=6. All selected Pulsar attacks caused native reveal failure on the 10 samples while staying inside the quality budget.
 
 Caveats:
 
 - These are 10-sample calibration choices, not final paper-scale tables.
+- 2026-05-29 update: soft blur was added for methods whose minimum kernel-3 blur exceeded the quality budget. The selected summary now has 24 rows from 133 calibration summaries.
 - These calibration samples are excluded from formal summary statistics by default.
 - RGS remains excluded from attacks for runtime reasons.
 - Diffusion-Stego has been removed from active baselines.

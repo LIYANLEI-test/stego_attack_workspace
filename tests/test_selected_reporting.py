@@ -7,10 +7,14 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+import numpy as np
+from PIL import Image
+
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import attack_common
 import render_paper_tables as render
 import select_quality_budget_attacks as selector
 import summarize_attack_deltas as deltas
@@ -75,6 +79,23 @@ class SelectedSummaryTests(unittest.TestCase):
 
 
 class QualityAndTableTests(unittest.TestCase):
+    def test_soft_blur_factors_create_milder_non_identity_attacks(self) -> None:
+        array = np.zeros((7, 7, 3), dtype=np.uint8)
+        array[:, :3] = 255
+        array[3, 3] = 255
+        image = Image.fromarray(array, "RGB")
+
+        median_soft = np.asarray(attack_common.median_blur_pil(image, 0.5))
+        median_full = np.asarray(attack_common.median_blur_pil(image, 3))
+        self.assertGreater(np.abs(median_soft.astype(int) - array.astype(int)).sum(), 0)
+        self.assertLess(
+            np.abs(median_soft.astype(int) - array.astype(int)).sum(),
+            np.abs(median_full.astype(int) - array.astype(int)).sum(),
+        )
+
+        gaussian_soft = np.asarray(attack_common.gaussian_blur_pil(image, 0.5))
+        self.assertGreater(np.abs(gaussian_soft.astype(int) - array.astype(int)).sum(), 0)
+
     def test_selector_requires_complete_psnr_and_lpips_coverage(self) -> None:
         good = {
             "scored_total": 2,
