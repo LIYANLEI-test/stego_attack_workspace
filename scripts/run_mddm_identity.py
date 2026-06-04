@@ -47,7 +47,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model-id", default="runwayml/stable-diffusion-v1-5")
     parser.add_argument("--hf-cache-dir", default="/data2/liyanlei/huggingface")
     parser.add_argument("--hf-endpoint", default="https://hf-mirror.com")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "regen_vae"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "regen_vae", "scad"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--force", action="store_true")
@@ -232,7 +232,7 @@ def main() -> None:
                 "exact_match": metrics["exact_match"],
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else "",
                 "image_path": record["image_path"],
                 "attacked_path": attacked_path,
                 "record_path": str(record_path),
@@ -252,7 +252,7 @@ def main() -> None:
                     "sample_index": sample_index,
                     "attack_kind": args.attack_kind,
                     "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else "",
                     "image_path": str(record.get("image_path", "")),
                     "attacked_path": attacked_path,
                     "stage": stage,
@@ -276,7 +276,7 @@ def main() -> None:
         "payload_bytes_override": args.payload_bytes,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
-        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else None,
         "model_id": args.model_id,
         "payload_file": str(protocol_dir / "mddm_messages_500.jsonl"),
         "prompt_file": str(protocol_dir / "prompts_500.txt"),

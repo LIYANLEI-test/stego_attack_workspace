@@ -67,7 +67,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--bit-num", type=int, default=1)
     parser.add_argument("--attack-layer", default="identity")
     parser.add_argument("--attack-factor", type=float, default=0.0)
-    parser.add_argument("--attack-kind", default="native", choices=["native", "identity", "resize", "storage", "jpeg", "mblur", "gblur", "regen_vae"])
+    parser.add_argument("--attack-kind", default="native", choices=["native", "identity", "resize", "storage", "jpeg", "mblur", "gblur", "regen_vae", "scad"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--precision", default="autocast", choices=["full", "autocast"])
     parser.add_argument("--gpu", default="cuda:0")
@@ -275,8 +275,8 @@ def main() -> None:
                         stage = "attack_layer"
                         if args.attack_kind == "identity":
                             pass
-                        elif args.attack_kind in {"resize", "storage", "jpeg", "mblur", "gblur", "regen_vae"}:
-                            factor = args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else None
+                        elif args.attack_kind in {"resize", "storage", "jpeg", "mblur", "gblur", "regen_vae", "scad"}:
+                            factor = args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else None
                             x0_samples = attack_roundtrip_tensor_minus1_1(
                                 x0_samples,
                                 args.attack_kind,
@@ -341,7 +341,7 @@ def main() -> None:
                 "attack_layer": args.attack_layer,
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else "",
                 "bit_num": bits,
                 "payload_bits": len(payload_bits),
                 "payload_sha256": bits_sha256(payload_bits),
@@ -376,7 +376,7 @@ def main() -> None:
                     "sample_index": sample_index,
                     "attack_kind": args.attack_kind,
                     "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else "",
                     "image_path": image_path,
                     "attacked_path": attacked_path,
                     "stage": stage,
@@ -406,7 +406,7 @@ def main() -> None:
         "attack_layer": args.attack_layer,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
-        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else None,
         "mapping_func": args.mapping_func,
         "bit_num": args.bit_num,
         "skip_image": args.skip_image,

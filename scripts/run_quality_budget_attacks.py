@@ -30,6 +30,7 @@ ATTACK_FACTORS = {
     "gblur": ["0.25", "0.5", "0.75", "1", "1.5", "2", "3", "5", "7"],
     "regen_vae": ["6", "5", "4", "3", "2", "1"],
     "unmarker": ["high_smoke_25"],
+    "scad": ["30"],
 }
 
 
@@ -106,7 +107,7 @@ def base_env(gpu: str) -> dict[str, str]:
 def attack_args(job: Job) -> list[str]:
     if job.attack == "resize":
         return ["--attack-kind", "resize", "--resize-factor", job.factor]
-    if job.attack in {"jpeg", "mblur", "gblur"}:
+    if job.attack in {"jpeg", "mblur", "gblur", "scad"}:
         return ["--attack-kind", job.attack, "--attack-factor", job.factor]
     if job.attack == "regen_vae":
         if job.method == "gsd_cifar10":

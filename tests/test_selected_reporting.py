@@ -97,6 +97,24 @@ class QualityAndTableTests(unittest.TestCase):
         gaussian_soft = np.asarray(attack_common.gaussian_blur_pil(image, 0.5))
         self.assertGreater(np.abs(gaussian_soft.astype(int) - array.astype(int)).sum(), 0)
 
+    def test_scad_lite_calibrates_to_target_psnr(self) -> None:
+        yy, xx = np.indices((32, 32), dtype=np.uint8)
+        array = np.stack(
+            [
+                (xx * 7 + yy * 3) % 255,
+                (xx * 5 + 31) % 255,
+                (yy * 9 + 17) % 255,
+            ],
+            axis=2,
+        ).astype(np.uint8)
+        image = Image.fromarray(array, "RGB")
+        attacked = np.asarray(attack_common.scad_lite_pil(image, 30.0), dtype=np.uint8)
+        mse = np.mean((array.astype(np.float32) - attacked.astype(np.float32)) ** 2)
+        psnr = 20.0 * np.log10(255.0 / np.sqrt(mse))
+        self.assertGreaterEqual(psnr, 29.5)
+        self.assertLessEqual(psnr, 30.5)
+        self.assertEqual(attack_common.attack_suffix("scad", attack_factor=30), "scad_p30")
+
     def test_selector_requires_complete_psnr_and_lpips_coverage(self) -> None:
         good = {
             "scored_total": 2,

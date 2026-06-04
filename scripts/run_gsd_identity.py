@@ -64,7 +64,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--attack-kind",
         default="identity",
-        choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "unmarker", "regen_vae"],
+        choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "unmarker", "regen_vae", "scad"],
     )
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--attack-factor", type=float, default=None)
@@ -308,7 +308,7 @@ def main() -> None:
                 "use_ownmodel": args.use_ownmodel,
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "scad"} else "",
                 "unmarker_stage": args.unmarker_stage if args.attack_kind == "unmarker" else "",
                 "unmarker_profile": args.unmarker_profile if args.attack_kind == "unmarker" else "",
                 "unmarker_iterations": args.unmarker_iterations if args.attack_kind == "unmarker" else "",
@@ -344,7 +344,7 @@ def main() -> None:
                     "sample_index": sample_index,
                     "attack_kind": args.attack_kind,
                     "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else "",
                     "image_path": image_path,
                     "attacked_path": attacked_path,
                     "stage": stage,
@@ -376,7 +376,7 @@ def main() -> None:
         "use_ownmodel": args.use_ownmodel,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
-        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur"} else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "scad"} else None,
         "unmarker_stage": args.unmarker_stage if args.attack_kind == "unmarker" else None,
         "unmarker_profile": args.unmarker_profile if args.attack_kind == "unmarker" else None,
         "unmarker_iterations": args.unmarker_iterations if args.attack_kind == "unmarker" else None,

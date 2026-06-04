@@ -66,6 +66,79 @@ def gaussian_blur_pil(image: Image.Image, kernel_size: float) -> Image.Image:
     return Image.fromarray(cv2.GaussianBlur(array, (kernel, kernel), 0), "RGB")
 
 
+def _array_psnr(a: np.ndarray, b: np.ndarray) -> float:
+    mse = float(np.mean((a.astype(np.float32) - b.astype(np.float32)) ** 2))
+    if mse <= 1e-12:
+        return float("inf")
+    return 20.0 * float(np.log10(255.0 / np.sqrt(mse)))
+
+
+def _gaussian_float(array: np.ndarray, sigma: float) -> np.ndarray:
+    return cv2.GaussianBlur(array.astype(np.float32), (0, 0), sigmaX=sigma, sigmaY=sigma)
+
+
+def scad_lite_pil(image: Image.Image, target_psnr: float = 30.0) -> Image.Image:
+    """Blind carrier-desynchronization attack with target-PSNR calibration.
+
+    This is the first lightweight SCAD prototype: estimate fragile carrier
+    residuals from self-canonicalization, perturb mainly in that subspace, then
+    binary-search the perturbation strength to hit the requested PSNR.
+    """
+    rgb = image.convert("RGB")
+    original = np.asarray(rgb, dtype=np.float32)
+    h, w, _ = original.shape
+
+    canonical_images = [
+        resize_roundtrip_pil(rgb, 0.75),
+        resize_roundtrip_pil(rgb, 1.25),
+        jpeg_roundtrip_pil(rgb, 70),
+        gaussian_blur_pil(rgb, 0.75),
+    ]
+    canonical = np.mean([np.asarray(item, dtype=np.float32) for item in canonical_images], axis=0)
+
+    high_original = original - _gaussian_float(original, 1.0)
+    high_canonical = canonical - _gaussian_float(canonical, 1.0)
+    carrier_score = np.mean(np.abs(high_original - high_canonical), axis=2)
+    content_edge = np.mean(np.abs(high_original), axis=2)
+    carrier_score = carrier_score / (content_edge + 2.0)
+    cutoff = float(np.percentile(carrier_score, 65.0))
+    if cutoff <= 1e-6:
+        mask = np.ones((h, w), dtype=np.float32) * 0.25
+    else:
+        mask = np.clip(carrier_score / cutoff, 0.0, 1.0).astype(np.float32)
+    mask = cv2.GaussianBlur(mask, (0, 0), sigmaX=0.7, sigmaY=0.7)[..., None]
+
+    yy, xx = np.indices((h, w), dtype=np.int32)
+    checker = (((xx + yy) % 2) * 2 - 1).astype(np.float32)[..., None]
+    color_sign = np.asarray([1.0, -1.0, 0.75], dtype=np.float32).reshape(1, 1, 3)
+    carrier_direction = np.sign(high_original - high_canonical)
+    carrier_direction[carrier_direction == 0] = 1.0
+
+    purification_direction = canonical - original
+    adversarial_direction = 6.0 * mask * carrier_direction + 2.0 * mask * checker * color_sign
+    direction = purification_direction + adversarial_direction
+
+    def candidate(alpha: float) -> np.ndarray:
+        return np.clip(np.rint(original + alpha * direction), 0, 255).astype(np.uint8)
+
+    low = 0.0
+    high = 1.0
+    best = candidate(high)
+    while _array_psnr(original, best) > target_psnr and high < 16.0:
+        high *= 2.0
+        best = candidate(high)
+
+    for _ in range(28):
+        mid = (low + high) / 2.0
+        trial = candidate(mid)
+        if _array_psnr(original, trial) > target_psnr:
+            low = mid
+        else:
+            high = mid
+            best = trial
+    return Image.fromarray(best, "RGB")
+
+
 def _odd_kernel(name: str, value: float) -> int:
     kernel = int(round(value))
     if kernel <= 0 or kernel % 2 == 0:
@@ -93,6 +166,8 @@ def attack_suffix(attack_kind: str, resize_factor: float = 1.0, attack_factor: f
         if attack_factor is None:
             return "regen_vae"
         return f"regen_vae_q{fmt(attack_factor)}"
+    if attack_kind == "scad":
+        return f"scad_p{fmt(attack_factor if attack_factor is not None else 30.0)}"
     raise ValueError(f"unsupported attack kind: {attack_kind}")
 
 
@@ -125,6 +200,8 @@ def apply_attack_pil(
 
         quality = int(round(attack_factor)) if attack_factor is not None else 3
         return apply_regen_vae_pil(image, quality=quality)
+    if attack_kind == "scad":
+        return scad_lite_pil(image, target_psnr=float(attack_factor) if attack_factor is not None else 30.0)
     raise ValueError(f"unsupported attack kind: {attack_kind}")
 
 

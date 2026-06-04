@@ -58,7 +58,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--hf-endpoint", default=DEFAULT_HF_ENDPOINT)
     parser.add_argument("--sage-bin", default="/data2/liyanlei/envs/stego_attack/bin/sage")
     parser.add_argument("--save-images", action="store_true")
-    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "regen_vae"])
+    parser.add_argument("--attack-kind", default="identity", choices=["identity", "resize", "storage", "jpeg", "mblur", "gblur", "regen_vae", "scad"])
     parser.add_argument("--resize-factor", type=float, default=1.0)
     parser.add_argument("--attack-factor", type=float, default=None)
     parser.add_argument("--sample-dtype", default="uint16", choices=["uint8", "uint16"])
@@ -339,7 +339,7 @@ def main() -> None:
                 "exact_match": recovered == message,
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else "",
                 "sample_dtype": args.sample_dtype,
                 "image_path": image_path,
                 "attacked_path": attacked_path,
@@ -364,7 +364,7 @@ def main() -> None:
                 "payload_sha256": hashlib.sha256(message).hexdigest() if message else "",
                 "attack_kind": args.attack_kind,
                 "resize_factor": args.resize_factor if args.attack_kind == "resize" else "",
-                "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else "",
+                    "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else "",
                 "sample_dtype": args.sample_dtype,
                 "image_path": image_path,
                 "attacked_path": attacked_path,
@@ -394,7 +394,7 @@ def main() -> None:
         "hist_bins": args.hist_bins,
         "attack_kind": args.attack_kind,
         "resize_factor": args.resize_factor if args.attack_kind == "resize" else None,
-        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae"} else None,
+        "attack_factor": args.attack_factor if args.attack_kind in {"jpeg", "mblur", "gblur", "regen_vae", "scad"} else None,
         "sample_dtype": args.sample_dtype,
         "message_rule": "SHAKE256(protocol_seed | pulsar | sample_index | capacity_bytes)",
         "results_csv": str(csv_path),

@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 Phase: 4 of 5 (Evaluation And Analysis)
 Plan: selected held-out formal queue and paper-readiness audit
 Status: Formal selected-attack queue stopped at user's request; only 10-sample smoke validation should continue without further approval
-Last activity: 2026-06-05 02:05 CST - Scoped current attack comparison to bit-payload methods and excluded image-payload CRoSS/RGS from active main tables.
+Last activity: 2026-06-05 03:20 CST - Implemented and ran a 10-sample SCAD-lite pilot at target PSNR about 30 dB on current bit-payload methods.
 
 Progress: [======----] 60%
 
@@ -56,6 +56,9 @@ Recent decisions affecting current work:
 - Current active attack-comparison scope is bit-payload methods only. CRoSS and
   RGS are image-payload methods and are excluded from the active main tables
   unless a separate image-payload study is explicitly planned.
+- The first SCAD-lite prototype is a mechanism smoke test, not yet a SOTA
+  result: it hits PSNR about 30 dB, but LPIPS is high on MDDM/Pulsar and BER is
+  weaker than current Regen-VAE/JPEG target-PSNR candidates on GSD/MAS.
 - Treat calibration indices `0-9` as parameter-selection-only; formal summaries use held-out indices `10+`.
 - Score failed native recovery as zero only after the measurable attacked image exists; keep other runner failures unscorable.
 - Record baseline provenance independently of adapted attack provenance, and report identity-success-conditioned deltas where native identity failures exist.
@@ -533,6 +536,39 @@ Paper framework decisions:
 - Diffusion-Stego has been removed from active baselines and image-attack claims.
 - Regen-VAE and UnMarker are adapted attack baselines, not full paper reproductions.
 
+### Current SCAD-Lite Pilot
+
+GSD quick task: `.planning/quick/20260605-scad-lite-10-sample-pilot/`
+
+Doc: `docs/scad_lite_pilot_20260605.md`
+
+Run root:
+
+```text
+/data2/liyanlei/stego_attack_data/attack_runs/scad_lite_10_20260605
+```
+
+Prototype:
+
+```text
+attack_kind=scad
+attack_factor=30
+```
+
+10-sample results:
+
+- GSD CIFAR10: bit accuracy 0.6974, BER 0.3026, PSNR 29.9997, LPIPS 0.0522.
+- MAS/GRDH: bit accuracy 0.8856, BER 0.1144, PSNR 29.9675, LPIPS 0.1055.
+- MDDM-128 pilot: bit accuracy 0.9752, BER 0.0248, PSNR 30.0000, LPIPS 0.1888.
+- Pulsar: 10/10 reveal failures, PSNR 30.0000, LPIPS 0.3916.
+
+Conclusion:
+
+- PSNR targeting works.
+- The first carrier perturbation is too perceptually disruptive on MDDM/Pulsar.
+- Next SCAD version should add diffusion/VAE residual resynthesis or smoother
+  carrier transport before it can be presented as a strong method.
+
 ### Quick Tasks Completed
 
 | Date | Task | Result |
@@ -553,6 +589,7 @@ Paper framework decisions:
 | 2026-05-28 | Remove Diffusion-Stego active baseline | Removed NS-DSer projection-only Diffusion-Stego runners/docs/protocol payloads from the active project; historical `/data2` outputs remain archival only |
 | 2026-06-05 | Target-PSNR attack comparison | Added PSNR=30 closest-parameter comparison and bit-payload attack summaries; Regen-VAE/JPEG are strongest non-Pulsar 10-sample candidates, while UnMarker and Pulsar need caveats for equal-PSNR reporting |
 | 2026-06-05 | Bit-payload-only attack scope | Excluded image-payload CRoSS/RGS from the current attack comparison; generated bit-only PSNR=30 selection and summary CSVs for GSD, MAS/GRDH, Pulsar, and MDDM pilot |
+| 2026-06-05 | SCAD-lite 10-sample pilot | Added `attack_kind=scad` and ran 10 samples on bit-payload methods at PSNR about 30; GSD BER 0.3026, MAS BER 0.1144, MDDM BER 0.0248, Pulsar 10/10 reveal failures but high LPIPS |
 
 ### Pending Todos
 
@@ -574,5 +611,5 @@ None in `.planning/todos/pending/` yet.
 ## Session Continuity
 
 Last session: 2026-06-05 CST
-Stopped at: Bit-payload-only target-PSNR=30 comparison generated from existing 10-sample calibration rows. Full-scale execution remains gated behind explicit user approval.
+Stopped at: SCAD-lite 10-sample pilot completed and summarized. Full-scale execution remains gated behind explicit user approval.
 Resume file: `.planning/.continue-here.md`

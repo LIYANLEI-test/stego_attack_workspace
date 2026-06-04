@@ -85,6 +85,10 @@ Formal attack evaluation:
 - Current main-table candidates are GSD CIFAR10, MAS/GRDH, and Pulsar. MDDM
   remains bit-payload appendix-only, CRoSS/RGS are excluded as image-payload
   methods, and Diffusion-Stego is removed from current claims.
+- SCAD-lite was implemented as a first black-box carrier-desynchronization
+  prototype and tested on 10 samples at PSNR about 30 dB. It is not yet a
+  paper-ready SOTA method because LPIPS is high on MDDM/Pulsar and bit
+  destruction is weaker than Regen-VAE/JPEG on GSD/MAS.
 
 ## Constraints
 
