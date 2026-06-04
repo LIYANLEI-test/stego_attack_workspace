@@ -54,15 +54,18 @@ def main() -> int:
             "calibration_sample_indices": "0-9",
             "paper_summary": "heldout_excluding_calibration_0_9",
             "reason": "Attack parameters were selected on the 10-sample calibration set.",
+            "current_scope": "bit_payload_only",
+            "excluded_methods": {
+                "cross": "image-payload method excluded from current bit-information comparison",
+                "rgs": "image-payload method excluded from current bit-information comparison",
+            },
             "raw_generated_counts": {
-                "cross": 100,
                 "gsd_cifar10": 500,
                 "mas_grdh": 500,
                 "mddm_128_pilot": 50,
                 "pulsar": 500,
             },
             "formal_heldout_counts": {
-                "cross": 90,
                 "gsd_cifar10": 490,
                 "mas_grdh": 490,
                 "mddm_128_pilot": 40,

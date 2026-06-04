@@ -34,6 +34,7 @@ PYTHON = Path("/data2/liyanlei/envs/stego_attack/bin/python")
 ENV_BIN = Path("/data2/liyanlei/envs/stego_attack/bin")
 HF_HOME = Path("/data2/liyanlei/huggingface")
 TORCH_HOME = Path("/data2/liyanlei/torch")
+DEFAULT_METHODS = "gsd_cifar10,mas_grdh,pulsar,mddm_128_pilot"
 
 
 @dataclass(frozen=True)
@@ -50,7 +51,11 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", default=str(DEFAULT_ROOT))
     parser.add_argument("--gpus", default="0,1,2,3")
-    parser.add_argument("--methods", default="", help="Comma-separated method subset. Default: all selected methods.")
+    parser.add_argument(
+        "--methods",
+        default=DEFAULT_METHODS,
+        help="Comma-separated method subset. Default: bit-payload methods only.",
+    )
     parser.add_argument("--method-counts", default="", help="Comma-separated overrides, e.g. gsd_cifar10=100,mas_grdh=100.")
     parser.add_argument("--count", type=int, default=None, help="Override every selected method count.")
     parser.add_argument("--poll-seconds", type=float, default=10.0)

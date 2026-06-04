@@ -2,10 +2,23 @@
 
 ## Scope
 
-This report reuses the existing 10-sample calibration grid:
+This report reuses the existing 10-sample calibration grid and restricts the
+active comparison to bit-payload steganography methods:
 
 ```text
 /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary.csv
+```
+
+Included methods:
+
+```text
+GSD CIFAR10, MAS/GRDH, Pulsar, MDDM 128-byte pilot
+```
+
+Excluded for the current bit-information comparison:
+
+```text
+CRoSS and RGS, because they hide image payloads rather than direct bit payloads
 ```
 
 New comparison rule:
@@ -29,8 +42,7 @@ bit_destruction_rate = BER = 1 - bit_accuracy
 
 For Pulsar region/ECC, a saved attacked image followed by native reveal failure
 is scored as complete payload destruction and is also reported with
-`reveal_failure_rate`. For CRoSS, the payload is an image, so the main recovery
-metric remains recovered-secret PSNR rather than BER.
+`reveal_failure_rate`.
 
 ## Bit-Payload Attack Summary
 
@@ -57,7 +69,8 @@ Current interpretation:
   simple baseline in some individual targets.
 - UnMarker is not yet comparable because the current smoke profile stays at
   PSNR about 45 dB; it needs tuning to the 30 dB quality point or should remain
-  a candidate-only result.
+  a candidate-only result. It is not included in the current formal selected
+  matrix.
 
 ## Including Pulsar
 
@@ -85,31 +98,13 @@ This means Pulsar is already fully broken by the current candidates, but a
 stricter equal-PSNR-30 table would need a harsher or finer Pulsar grid if the
 paper requires every row to sit near 30 dB.
 
-## CRoSS Image-Payload Target
-
-CRoSS carries an image payload, so lower recovered-secret PSNR means stronger
-payload degradation. Exact-match failure is not a useful main metric because
-CRoSS native identity recovery is not pixel-exact.
-
-| Attack | Param | Stego PSNR | LPIPS | Recovered-secret PSNR |
-|---|---:|---:|---:|---:|
-| Regen-VAE | q=2 | 30.084 | 0.1935 | 16.453 |
-| Gaussian blur | k=7 | 29.369 | 0.2271 | 17.781 |
-| Resize | 0.5 | 30.043 | 0.1792 | 18.619 |
-| JPEG | q=50 | 33.355 | 0.0574 | 19.245 |
-| Median blur | k=5 | 29.280 | 0.1670 | 19.752 |
-
-At the target-PSNR point, Regen-VAE is strongest for CRoSS but has high LPIPS.
-JPEG has much lower LPIPS but its PSNR is about 33.4 dB rather than close to
-30 dB in the existing grid.
-
 ## Artifacts
 
 ```text
 scripts/select_target_psnr_attacks.py
-/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_selection.csv
-/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_methods.csv
-/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_methods_no_pulsar.csv
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_selection_bit_payload.csv
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_payload.csv
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_payload_no_pulsar.csv
 ```
 
 ## Verification
@@ -117,5 +112,5 @@ scripts/select_target_psnr_attacks.py
 ```text
 env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH python -m py_compile scripts/select_target_psnr_attacks.py
 env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH python -m unittest discover -s tests -v
-env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH python scripts/select_target_psnr_attacks.py /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary.csv --target-psnr 30 --tolerance 1 --output /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_selection.csv --attack-summary-output /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_methods.csv
+env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH python scripts/select_target_psnr_attacks.py /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary.csv --target-psnr 30 --tolerance 1 --bit-payload-only --output /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_selection_bit_payload.csv --attack-summary-output /data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_payload.csv
 ```

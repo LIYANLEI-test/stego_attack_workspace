@@ -79,11 +79,12 @@ Formal attack evaluation:
 
 - Parameters were selected on calibration sample indices `0-9` under
   stego-vs-attacked PSNR >= 30 dB and LPIPS <= 0.10.
-- Formal paper summaries exclude `0-9` by default, leaving held-out counts of
-  CRoSS `90`, GSD/MAS/GRDH/Pulsar `490`, and MDDM pilot `40`.
-- Main-table candidates are CRoSS, GSD CIFAR10, MAS/GRDH, and Pulsar; MDDM
-  remains appendix-only, RGS remains attack-skipped for runtime unless approved,
-  and Diffusion-Stego is removed from current claims.
+- Formal paper summaries exclude `0-9` by default. For the current bit-payload
+  scope this leaves held-out counts of GSD/MAS/GRDH/Pulsar `490` and MDDM
+  pilot `40`.
+- Current main-table candidates are GSD CIFAR10, MAS/GRDH, and Pulsar. MDDM
+  remains bit-payload appendix-only, CRoSS/RGS are excluded as image-payload
+  methods, and Diffusion-Stego is removed from current claims.
 
 ## Constraints
 

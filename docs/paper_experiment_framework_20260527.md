@@ -22,7 +22,6 @@ runs complete at the planned counts:
 
 | Method | Payload type | Label | Raw generated | Formal held-out | Main recovery metric |
 |--------|--------------|-------|---------------|-----------------|----------------------|
-| CRoSS | image payload | `native_official` | 100 | 90 | recovered-secret PSNR |
 | GSD CIFAR10 | bit payload | `native_official` | 500 | 490 | bit accuracy |
 | MAS/GRDH | bit payload | `native_official` | 500 | 490 | bit accuracy |
 | Pulsar | bit payload | `native_official` | 500 | 490 | bit accuracy and native failure rate |
@@ -38,19 +37,20 @@ Currently excluded from attack main tables:
 
 | Method | Reason |
 |--------|--------|
-| RGS | official identity complete but attack runtime is too high for current queue |
+| CRoSS | image-payload method; excluded from the current bit-information comparison |
+| RGS | image-payload method and attack runtime is too high for current queue |
 | Diffusion-Stego | removed; old NS-DSer path was projection-only, not full image generation/reveal |
 
 ## Attack Families
 
-Selected attacks are fixed by the quality-budget calibration in
-`docs/quality_budget_attack_selection_20260527.md`.
+Selected attacks for the current bit-payload comparison are fixed by the
+target-PSNR selection in `docs/target_psnr_attack_comparison_20260605.md`.
 
-Quality budget:
+Quality target:
 
 ```text
-stego-vs-attacked PSNR >= 30 dB
-stego-vs-attacked LPIPS <= 0.10
+stego-vs-attacked PSNR ~= 30 dB
+LPIPS is reported alongside payload destruction
 ```
 
 ## Formal Split And Quality Contract
@@ -58,8 +58,8 @@ stego-vs-attacked LPIPS <= 0.10
 Attack parameters were selected using calibration sample indices `0-9`.
 Although the queue produces the full deterministic raw set for traceability,
 paper summaries and paired identity deltas exclude these ten indices by
-default. The formal held-out set is therefore `10-99` for CRoSS, `10-49` for
-MDDM pilot, and `10-499` for the 500-sample methods. Use
+default. The formal held-out set is therefore `10-49` for MDDM pilot and
+`10-499` for the 500-sample bit-payload methods. Use
 `--include-calibration` only for diagnostic reconstruction of the raw queue,
 not in paper tables.
 
@@ -96,6 +96,7 @@ env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
   /data2/liyanlei/envs/stego_attack/bin/python \
   scripts/run_selected_attack_queue.py \
   --root /data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527 \
+  --methods gsd_cifar10,mas_grdh,pulsar,mddm_128_pilot \
   --gpus 0,1,2,3
 ```
 
@@ -104,7 +105,9 @@ Dry run:
 ```sh
 env -u LD_LIBRARY_PATH PATH=/data2/liyanlei/envs/stego_attack/bin:$PATH \
   /data2/liyanlei/envs/stego_attack/bin/python \
-  scripts/run_selected_attack_queue.py --dry-run
+  scripts/run_selected_attack_queue.py \
+  --methods gsd_cifar10,mas_grdh,pulsar,mddm_128_pilot \
+  --dry-run
 ```
 
 Summary:
@@ -283,7 +286,7 @@ Safe claim if formal runs complete:
 
 ```text
 Under a fixed image-quality budget, selected image-domain perturbations and
-regeneration attacks substantially degrade native hidden-payload recovery across
+regeneration attacks substantially degrade native hidden-bit recovery across
 multiple generative steganography baselines.
 ```
 
@@ -293,8 +296,9 @@ Claims that need more work:
 The attack is universal across all generative steganography methods.
 ```
 
-RGS is not yet in the attack table; Diffusion-Stego has been removed from the
-active project.
+CRoSS and RGS are image-payload methods and are excluded from the current
+bit-information attack table. Diffusion-Stego has been removed from the active
+project.
 
 ```text
 MDDM is an official baseline.
@@ -316,8 +320,8 @@ transforms under this workspace's native-reveal protocol.
    the paper analysis.
 3. Add robust uncertainty estimates and aggregate attack-family comparisons
    only after quality-budget audit passes.
-4. Decide whether to spend compute on RGS selected attacks or explicitly keep
-   it as identity-only due to runtime.
+4. Keep CRoSS/RGS out of the current bit-payload comparison unless a separate
+   image-payload study is explicitly planned.
 5. Either integrate an official MDDM implementation or keep MDDM out of main
    claims.
 6. Do not reintroduce Diffusion-Stego unless an official/public full

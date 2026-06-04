@@ -11,7 +11,7 @@ from pathlib import Path
 DEFAULT_ROOT = Path("/data2/liyanlei/stego_attack_data/attack_runs/selected_quality_budget_20260527")
 PSNR_MIN = 30.0
 LPIPS_MAX = 0.10
-MAIN_METHODS = {"cross", "gsd_cifar10", "mas_grdh", "pulsar"}
+MAIN_METHODS = {"gsd_cifar10", "mas_grdh", "pulsar"}
 APPENDIX_METHODS = {"mddm_128_pilot"}
 ADAPTED_PROVENANCE = {"adapted_attack"}
 PILOT_PROVENANCE = {"native_third_party"}

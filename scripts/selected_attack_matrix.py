@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Selected quality-budget attack matrix for formal experiments.
+"""Selected bit-payload target-PSNR attack matrix for formal experiments.
 
-These parameters were calibrated on 2026-05-27 under:
-  stego-vs-attacked PSNR >= 30 dB and LPIPS <= 0.10
+These parameters were calibrated on the 2026-05-27/2026-05-29 10-sample grid
+and reselected on 2026-06-05 under:
+  target stego-vs-attacked PSNR ~= 30 dB
 
 Keep this file as the single source of truth for formal selected-attack queues
 and paper-table aggregation. Exploratory grids should use separate scripts.
@@ -14,7 +15,6 @@ from dataclasses import dataclass
 
 
 DEFAULT_FORMAL_COUNTS = {
-    "cross": 100,
     "gsd_cifar10": 500,
     "mas_grdh": 500,
     "mddm_128_pilot": 50,
@@ -22,7 +22,6 @@ DEFAULT_FORMAL_COUNTS = {
 }
 
 BASELINE_PROVENANCE = {
-    "cross": "native_official",
     "gsd_cifar10": "native_official",
     "mas_grdh": "native_official",
     "mddm_128_pilot": "native_third_party",
@@ -54,35 +53,30 @@ class SelectedAttack:
 
 
 SELECTED_ATTACKS: tuple[SelectedAttack, ...] = (
-    SelectedAttack("cross", "resize", "1.5", "resize_1_5", "recovery_psnr", "native_official"),
-    SelectedAttack("cross", "jpeg", "50", "jpeg_q50", "recovery_psnr", "native_official"),
-    SelectedAttack("cross", "mblur", "3", "median_blur_k3", "recovery_psnr", "native_official"),
-    SelectedAttack("cross", "gblur", "3", "gaussian_blur_k3", "recovery_psnr", "native_official"),
-    SelectedAttack("cross", "regen_vae", "5", "regen_vae_q5", "recovery_psnr", "adapted_attack"),
-    SelectedAttack("gsd_cifar10", "resize", "1.25", "resize_1_25", "bit_accuracy", "native_official"),
-    SelectedAttack("gsd_cifar10", "jpeg", "80", "jpeg_q80", "bit_accuracy", "native_official"),
-    SelectedAttack("gsd_cifar10", "mblur", "0.5", "median_blur_soft_0_5", "bit_accuracy", "native_official"),
-    SelectedAttack("gsd_cifar10", "gblur", "0.5", "gaussian_blur_radius_0_5", "bit_accuracy", "native_official"),
-    SelectedAttack("gsd_cifar10", "regen_vae", "6", "regen_vae_q6", "bit_accuracy", "adapted_attack"),
-    SelectedAttack(
-        "gsd_cifar10",
-        "unmarker",
-        "high_smoke_25",
-        "unmarker_high_smoke_25",
-        "bit_accuracy",
-        "adapted_attack",
-        "GSD-only smoke-profile UnMarker candidate.",
-    ),
+    SelectedAttack("gsd_cifar10", "resize", "1.5", "resize_1_5", "bit_accuracy", "native_official"),
+    SelectedAttack("gsd_cifar10", "jpeg", "70", "jpeg_q70", "bit_accuracy", "native_official"),
+    SelectedAttack("gsd_cifar10", "mblur", "0.75", "median_blur_soft_0_75", "bit_accuracy", "native_official"),
+    SelectedAttack("gsd_cifar10", "gblur", "0.75", "gaussian_blur_radius_0_75", "bit_accuracy", "native_official"),
+    SelectedAttack("gsd_cifar10", "regen_vae", "5", "regen_vae_q5", "bit_accuracy", "adapted_attack"),
     SelectedAttack("mas_grdh", "resize", "1.5", "resize_1_5", "bit_accuracy", "native_official"),
     SelectedAttack("mas_grdh", "jpeg", "50", "jpeg_q50", "bit_accuracy", "native_official"),
-    SelectedAttack("mas_grdh", "mblur", "0.5", "median_blur_soft_0_5", "bit_accuracy", "native_official"),
-    SelectedAttack("mas_grdh", "gblur", "0.5", "gaussian_blur_radius_0_5", "bit_accuracy", "native_official"),
-    SelectedAttack("mas_grdh", "regen_vae", "6", "regen_vae_q6", "bit_accuracy", "adapted_attack"),
+    SelectedAttack("mas_grdh", "mblur", "0.75", "median_blur_soft_0_75", "bit_accuracy", "native_official"),
+    SelectedAttack("mas_grdh", "gblur", "0.75", "gaussian_blur_radius_0_75", "bit_accuracy", "native_official"),
+    SelectedAttack("mas_grdh", "regen_vae", "4", "regen_vae_q4", "bit_accuracy", "adapted_attack"),
+    SelectedAttack(
+        "mddm_128_pilot",
+        "resize",
+        "0.5",
+        "resize_0_5",
+        "bit_accuracy",
+        "native_third_party",
+        "Pilot only; not official author code.",
+    ),
     SelectedAttack(
         "mddm_128_pilot",
         "jpeg",
-        "70",
-        "jpeg_q70",
+        "50",
+        "jpeg_q50",
         "bit_accuracy",
         "native_third_party",
         "Pilot only; not official author code.",
@@ -90,8 +84,8 @@ SELECTED_ATTACKS: tuple[SelectedAttack, ...] = (
     SelectedAttack(
         "mddm_128_pilot",
         "mblur",
-        "0.5",
-        "median_blur_soft_0_5",
+        "3",
+        "median_blur_k3",
         "bit_accuracy",
         "native_third_party",
         "Pilot only; not official author code.",
@@ -99,8 +93,17 @@ SELECTED_ATTACKS: tuple[SelectedAttack, ...] = (
     SelectedAttack(
         "mddm_128_pilot",
         "gblur",
-        "0.25",
-        "gaussian_blur_radius_0_25",
+        "1",
+        "gaussian_blur_radius_1",
+        "bit_accuracy",
+        "native_third_party",
+        "Pilot only; not official author code.",
+    ),
+    SelectedAttack(
+        "mddm_128_pilot",
+        "regen_vae",
+        "4",
+        "regen_vae_q4",
         "bit_accuracy",
         "native_third_party",
         "Pilot only; not official author code.",
@@ -108,47 +111,47 @@ SELECTED_ATTACKS: tuple[SelectedAttack, ...] = (
     SelectedAttack(
         "pulsar",
         "resize",
-        "1.25",
-        "resize_1_25",
+        "0.5",
+        "resize_0_5",
         "bit_accuracy",
         "native_official",
-        "Calibration produced native reveal failures within quality budget.",
+        "Calibration produced native reveal failures; closest current candidate is above target PSNR.",
     ),
     SelectedAttack(
         "pulsar",
         "jpeg",
-        "95",
-        "jpeg_q95",
+        "50",
+        "jpeg_q50",
         "bit_accuracy",
         "native_official",
-        "Calibration produced native reveal failures within quality budget.",
+        "Calibration produced native reveal failures; closest current candidate is above target PSNR.",
     ),
     SelectedAttack(
         "pulsar",
         "mblur",
-        "3",
-        "median_blur_k3",
+        "7",
+        "median_blur_k7",
         "bit_accuracy",
         "native_official",
-        "Calibration produced native reveal failures within quality budget.",
+        "Calibration produced native reveal failures; closest current candidate is above target PSNR.",
     ),
     SelectedAttack(
         "pulsar",
         "gblur",
-        "3",
-        "gaussian_blur_k3",
+        "7",
+        "gaussian_blur_k7",
         "bit_accuracy",
         "native_official",
-        "Calibration produced native reveal failures within quality budget.",
+        "Calibration produced native reveal failures; closest current candidate is above target PSNR.",
     ),
     SelectedAttack(
         "pulsar",
         "regen_vae",
-        "6",
-        "regen_vae_q6",
+        "1",
+        "regen_vae_q1",
         "bit_accuracy",
         "adapted_attack",
-        "Calibration produced native reveal failures within quality budget.",
+        "Calibration produced native reveal failures; closest current candidate is above target PSNR.",
     ),
 )
 

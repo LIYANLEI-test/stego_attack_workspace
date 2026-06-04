@@ -37,7 +37,7 @@ class SelectedSummaryTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             spec = SELECTED_ATTACKS[0]
-            out = root / "cross_resize_1_5_100"
+            out = root / f"{spec.method}_{spec.name_part}_100"
             stego = out / "stego.png"
             attacked = out / "attacked.png"
             stego.parent.mkdir(parents=True)
@@ -46,8 +46,8 @@ class SelectedSummaryTests(unittest.TestCase):
             write_rows(
                 out / "identity_results.csv",
                 [
-                    {"sample_index": 0, "recovery_psnr": 99.0, "exact_match": "False", "runtime_s": 1.0},
-                    {"sample_index": 10, "recovery_psnr": 20.0, "exact_match": "False", "runtime_s": 1.0},
+                    {"sample_index": 0, "bit_accuracy": 0.99, "exact_match": "False", "runtime_s": 1.0},
+                    {"sample_index": 10, "bit_accuracy": 0.8, "exact_match": "False", "runtime_s": 1.0},
                 ],
             )
             write_rows(
@@ -59,14 +59,14 @@ class SelectedSummaryTests(unittest.TestCase):
             self.assertEqual(row["rows"], 1)
             self.assertEqual(row["failures"], 1)
             self.assertEqual(row["unscorable_failures"], 0)
-            self.assertEqual(row["recovery_mean"], 10.0)
+            self.assertEqual(row["recovery_mean"], 0.4)
             self.assertTrue(row["complete"])
 
     def test_unscorable_failure_does_not_complete_formal_row(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
             spec = SELECTED_ATTACKS[0]
-            out = root / "cross_resize_1_5_100"
+            out = root / f"{spec.method}_{spec.name_part}_100"
             write_rows(
                 out / "identity_results.csv",
                 [{"sample_index": 10, "recovery_psnr": 20.0, "exact_match": "False", "runtime_s": 1.0}],
@@ -172,6 +172,32 @@ class QualityAndTableTests(unittest.TestCase):
         self.assertAlmostEqual(summary_rows[0]["mean_bit_destruction_rate"], 0.7)
         self.assertAlmostEqual(summary_rows[0]["mean_reveal_failure_rate"], 0.5)
 
+    def test_target_psnr_selector_can_restrict_to_bit_payload_methods(self) -> None:
+        base = {
+            "attack": "jpeg",
+            "rows": "10",
+            "failures": "0",
+            "unscorable_failures": "0",
+            "scored_total": "10",
+            "quality_psnr_n": "10",
+            "quality_lpips_n": "10",
+            "quality_psnr_mean": "30.0",
+            "quality_lpips_mean": "0.05",
+            "metric_mean": "0.6",
+            "exact": "0",
+        }
+        rows = [
+            {**base, "method": "cross", "factor": "50", "metric": "recovery_psnr"},
+            {**base, "method": "gsd_cifar10", "factor": "70", "metric": "bit_accuracy"},
+        ]
+        selected = target_selector.select_rows(
+            rows,
+            30.0,
+            1.0,
+            include_methods=target_selector.BIT_PAYLOAD_METHODS,
+        )
+        self.assertEqual([row["method"] for row in selected], ["gsd_cifar10"])
+
     def test_table_separates_appendix_and_shows_conditional_delta(self) -> None:
         base = {
             "attack": "jpeg",
@@ -200,6 +226,29 @@ class QualityAndTableTests(unittest.TestCase):
         self.assertNotIn("mddm_128_pilot", main)
         self.assertIn("mddm_128_pilot", appendix)
         self.assertIn("Delta (ID-ok)", text)
+
+    def test_render_excludes_image_payload_methods_from_current_main_table(self) -> None:
+        base = {
+            "attack": "jpeg",
+            "factor": "70",
+            "label": "jpeg_q70",
+            "metric": "bit_accuracy",
+            "total": "40",
+            "target": "40",
+            "recovery_mean": "0.5",
+            "quality_psnr_mean": "31.0",
+            "quality_lpips_mean": "0.05",
+            "failure_rate": "0",
+        }
+        text = render.render_markdown(
+            [
+                {**base, "method": "cross", "provenance": "native_official", "metric": "recovery_psnr"},
+                {**base, "method": "gsd_cifar10", "provenance": "native_official"},
+            ]
+        )
+        main = text.split("## Appendix Pilot Table")[0] if "## Appendix Pilot Table" in text else text
+        self.assertNotIn("cross", main)
+        self.assertIn("gsd_cifar10", main)
 
     def test_render_does_not_hide_incomplete_row_in_final_mode(self) -> None:
         rows = render.merged_rows(

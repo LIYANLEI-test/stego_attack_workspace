@@ -23,6 +23,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-psnr", type=float, default=30.0)
     parser.add_argument("--tolerance", type=float, default=1.0)
     parser.add_argument("--lpips-max", type=float, default=None)
+    parser.add_argument(
+        "--include-method",
+        action="append",
+        default=[],
+        help="Restrict selection to this method. Can be repeated.",
+    )
+    parser.add_argument(
+        "--exclude-method",
+        action="append",
+        default=[],
+        help="Exclude this method from selection. Can be repeated.",
+    )
+    parser.add_argument(
+        "--bit-payload-only",
+        action="store_true",
+        help="Restrict selection to bit-payload methods.",
+    )
     parser.add_argument("--output", default="")
     parser.add_argument("--attack-summary-output", default="")
     parser.add_argument(
@@ -139,9 +156,17 @@ def select_rows(
     target_psnr: float,
     tolerance: float,
     lpips_max: float | None = None,
+    include_methods: set[str] | None = None,
+    exclude_methods: set[str] | None = None,
 ) -> list[dict[str, object]]:
     selected: dict[tuple[str, str], dict[str, str]] = {}
+    exclude_methods = exclude_methods or set()
     for row in rows:
+        method = row.get("method", "")
+        if include_methods is not None and method not in include_methods:
+            continue
+        if method in exclude_methods:
+            continue
         if not is_valid_candidate(row, lpips_max):
             continue
         key = (row.get("method", ""), row.get("attack", ""))
@@ -230,7 +255,18 @@ def main() -> int:
         if args.attack_summary_output
         else summary_csv.with_name("target_psnr_30_attack_summary_bit_methods.csv")
     )
-    selected = select_rows(read_rows(summary_csv), args.target_psnr, args.tolerance, args.lpips_max)
+    include_methods = set(args.include_method) if args.include_method else None
+    if args.bit_payload_only:
+        include_methods = BIT_PAYLOAD_METHODS if include_methods is None else include_methods & BIT_PAYLOAD_METHODS
+    exclude_methods = set(args.exclude_method)
+    selected = select_rows(
+        read_rows(summary_csv),
+        args.target_psnr,
+        args.tolerance,
+        args.lpips_max,
+        include_methods,
+        exclude_methods,
+    )
     attack_summary = summarize_bit_attacks(selected, set(args.exclude_method_from_summary))
 
     selection_fields = [
@@ -276,6 +312,8 @@ def main() -> int:
     print(f"target_psnr: {args.target_psnr:g} dB")
     print(f"tolerance: +/- {args.tolerance:g} dB")
     print(f"lpips_filter: {args.lpips_max if args.lpips_max is not None else 'none'}")
+    print("include_methods: " + (",".join(sorted(include_methods)) if include_methods is not None else "all"))
+    print("exclude_methods: " + (",".join(sorted(exclude_methods)) if exclude_methods else "none"))
     print(f"selected_csv: {output}")
     print(f"attack_summary_csv: {attack_summary_output}")
     print_selection(selected)
