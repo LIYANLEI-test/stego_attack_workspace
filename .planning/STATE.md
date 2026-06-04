@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-05-27)
 Phase: 4 of 5 (Evaluation And Analysis)
 Plan: selected held-out formal queue and paper-readiness audit
 Status: Formal selected-attack queue stopped at user's request; only 10-sample smoke validation should continue without further approval
-Last activity: 2026-05-27 13:12 CST - Stopped the oversized selected formal queue after the user clarified the intended scope was 10-sample testing, not a 6550-record planned run.
+Last activity: 2026-06-05 01:25 CST - Added target-PSNR=30 attack comparison reporting from the existing 10-sample calibration grid.
 
 Progress: [======----] 60%
 
@@ -52,6 +52,7 @@ Recent decisions affecting current work:
 - Treat `XuandongZhao/WatermarkAttacker` Regen-VAE as a stronger adapted attack-method candidate, not a hiding/steganography baseline.
 - Treat `and-mill/semantic-forgery` as related semantic-watermark attack work, not a current hidden-payload destruction baseline.
 - For fair attack comparison, select attack parameters under a fixed stego-vs-attacked image-quality budget: PSNR >= 30 dB and LPIPS <= 0.10. Within budget, choose the strongest payload-destruction setting per method/attack.
+- For equal-quality attack comparison requested on 2026-06-05, also report a target-PSNR view: choose the parameter whose mean stego-vs-attacked PSNR is closest to 30 dB, then compare BER/destruction and LPIPS.
 - Treat calibration indices `0-9` as parameter-selection-only; formal summaries use held-out indices `10+`.
 - Score failed native recovery as zero only after the measurable attacked image exists; keep other runner failures unscorable.
 - Record baseline provenance independently of adapted attack provenance, and report identity-success-conditioned deltas where native identity failures exist.
@@ -275,6 +276,54 @@ Caveats:
 - MDDM remains `native_third_party`.
 - UnMarker is currently integrated only for GSD and is an adapted attack-method candidate.
 
+### Current Target-PSNR Attack Comparison
+
+GSD quick task: `.planning/quick/20260605-target-psnr-attack-comparison/`
+
+Doc: `docs/target_psnr_attack_comparison_20260605.md`
+
+Input summary:
+
+```text
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/quality_budget_summary.csv
+```
+
+Rule:
+
+```text
+target stego-vs-attacked PSNR = 30 dB
+tolerance flag = +/- 1 dB
+LPIPS is reported, not filtered
+10-sample calibration rows only
+```
+
+Generated CSVs:
+
+```text
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_selection.csv
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_methods.csv
+/data2/liyanlei/stego_attack_data/attack_runs/quality_budget_20260527/target_psnr_30_attack_summary_bit_methods_no_pulsar.csv
+```
+
+Main bit-payload summary excluding Pulsar, because Pulsar reveal failures
+dominate the mean:
+
+- Regen-VAE: mean BER/destruction 0.2259, PSNR 29.814, LPIPS 0.1751.
+- JPEG: mean BER/destruction 0.2050, PSNR 30.673, LPIPS 0.0736.
+- Median blur: mean BER/destruction 0.1315, PSNR 30.428, LPIPS 0.1223.
+- Gaussian blur: mean BER/destruction 0.1021, PSNR 29.475, LPIPS 0.1896.
+- Resize: mean BER/destruction 0.0966, PSNR 30.336, LPIPS 0.1865.
+
+Caveats:
+
+- Pulsar's closest available candidates are mostly above 30 dB but already
+  produce 10/10 native reveal failures; a stricter equal-PSNR table would need
+  harsher/finer Pulsar candidates.
+- UnMarker currently has only a GSD smoke point at PSNR about 45 dB, so it is
+  not yet comparable at PSNR 30.
+- CRoSS is image-payload and should be reported with recovered-secret PSNR, not
+  bit BER.
+
 ### Current Paper Framework And Formal Queue
 
 GSD quick task: `.planning/quick/20260527-paper-framework-and-selected-formal-queue/`
@@ -497,6 +546,7 @@ Paper framework decisions:
 | 2026-05-28 | Pulsar precision controls | 10-sample controls show native uint16 storage succeeds 10/10, uint8 storage fails 10/10, and uint16-preserving resize/median/Gaussian blur each fail 10/10 positive-payload samples |
 | 2026-05-28 | Pulsar paper resize/JPEG calibration | Paper-style raw Pulsar 10-sample check on church-256, DDIM50, E*64 key, 8192-byte payload: identity BER 0.284637, resize224 failure 6/10, JPEG Q90 10/10, JPEG Q70 10/10 under BER>0.48 |
 | 2026-05-28 | Remove Diffusion-Stego active baseline | Removed NS-DSer projection-only Diffusion-Stego runners/docs/protocol payloads from the active project; historical `/data2` outputs remain archival only |
+| 2026-06-05 | Target-PSNR attack comparison | Added PSNR=30 closest-parameter comparison and bit-payload attack summaries; Regen-VAE/JPEG are strongest non-Pulsar 10-sample candidates, while UnMarker and Pulsar need caveats for equal-PSNR reporting |
 
 ### Pending Todos
 
@@ -517,6 +567,6 @@ None in `.planning/todos/pending/` yet.
 
 ## Session Continuity
 
-Last session: 2026-05-28 CST
-Stopped at: Diffusion-Stego removed from active baselines after confirming only a projection-only NS-DSer path was available. Full-scale execution remains gated behind explicit user approval.
+Last session: 2026-06-05 CST
+Stopped at: Target-PSNR=30 attack comparison generated from existing 10-sample calibration rows. Full-scale execution remains gated behind explicit user approval.
 Resume file: `.planning/.continue-here.md`

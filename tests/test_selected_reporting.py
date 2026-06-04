@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import attack_common
 import render_paper_tables as render
 import select_quality_budget_attacks as selector
+import select_target_psnr_attacks as target_selector
 import summarize_attack_deltas as deltas
 import summarize_selected_attack_runs as summary
 import audit_selected_attack_results as audit
@@ -108,6 +109,68 @@ class QualityAndTableTests(unittest.TestCase):
         self.assertTrue(selector.is_within_budget(good, 30.0, 0.10))
         self.assertFalse(selector.is_within_budget({**good, "quality_lpips_n": 1}, 30.0, 0.10))
         self.assertFalse(selector.is_within_budget({**good, "quality_lpips_mean": ""}, 30.0, 0.10))
+
+    def test_target_psnr_selector_prefers_quality_alignment_then_strength(self) -> None:
+        base = {
+            "method": "gsd_cifar10",
+            "attack": "jpeg",
+            "rows": "10",
+            "failures": "0",
+            "unscorable_failures": "0",
+            "scored_total": "10",
+            "quality_psnr_n": "10",
+            "quality_lpips_n": "10",
+            "quality_lpips_mean": "0.05",
+            "metric": "bit_accuracy",
+            "exact": "0",
+        }
+        rows = [
+            {**base, "factor": "90", "quality_psnr_mean": "29.9", "metric_mean": "0.9"},
+            {**base, "factor": "70", "quality_psnr_mean": "30.5", "metric_mean": "0.1"},
+        ]
+        selected = target_selector.select_rows(rows, 30.0, 1.0)
+        self.assertEqual(selected[0]["factor"], "90")
+
+        rows = [
+            {**base, "factor": "80", "quality_psnr_mean": "29.8", "metric_mean": "0.8"},
+            {**base, "factor": "70", "quality_psnr_mean": "30.2", "metric_mean": "0.7"},
+        ]
+        selected = target_selector.select_rows(rows, 30.0, 1.0)
+        self.assertEqual(selected[0]["factor"], "70")
+
+    def test_target_psnr_bit_summary_reports_ber_and_failure_rate(self) -> None:
+        selected = [
+            {
+                "method": "gsd_cifar10",
+                "attack": "jpeg",
+                "factor": "70",
+                "metric": "bit_accuracy",
+                "metric_mean": "0.6",
+                "quality_psnr_mean": "30.0",
+                "quality_lpips_mean": "0.05",
+                "psnr_gap_abs": "0.0",
+                "bit_destruction_rate": 0.4,
+                "reveal_failure_rate": 0.0,
+                "exact_destruction_rate": 1.0,
+            },
+            {
+                "method": "pulsar",
+                "attack": "jpeg",
+                "factor": "50",
+                "metric": "bit_accuracy",
+                "metric_mean": "0.0",
+                "quality_psnr_mean": "38.0",
+                "quality_lpips_mean": "0.03",
+                "psnr_gap_abs": "8.0",
+                "bit_destruction_rate": 1.0,
+                "reveal_failure_rate": 1.0,
+                "exact_destruction_rate": 1.0,
+            },
+        ]
+        summary_rows = target_selector.summarize_bit_attacks(selected)
+        self.assertEqual(summary_rows[0]["attack"], "jpeg")
+        self.assertAlmostEqual(summary_rows[0]["mean_bit_destruction_rate"], 0.7)
+        self.assertAlmostEqual(summary_rows[0]["mean_reveal_failure_rate"], 0.5)
 
     def test_table_separates_appendix_and_shows_conditional_delta(self) -> None:
         base = {
